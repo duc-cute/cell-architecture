@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scholar LMS - Lesson Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#006c49",
+                    "tertiary-fixed": "#ffddb8",
+                    "secondary-container": "#6cf8bb",
+                    "surface-variant": "#d3e4fe",
+                    "error-container": "#ffdad6",
+                    "surface": "#f8f9ff",
+                    "inverse-primary": "#b4c5ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "surface-container-high": "#dce9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-surface": "#213145",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-container": "#e5eeff",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#c3c6d7",
+                    "outline": "#737686",
+                    "background": "#f8f9ff",
+                    "primary-fixed": "#dbe1ff",
+                    "primary-container": "#2563eb",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#996100",
+                    "surface-container-low": "#eff4ff",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#0053db",
+                    "on-surface-variant": "#434655",
+                    "on-surface": "#0b1c30",
+                    "surface-dim": "#cbdbf5",
+                    "on-primary": "#ffffff",
+                    "primary": "#004ac6",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed": "#2a1700",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-primary-container": "#eeefff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-secondary-fixed": "#002113",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "on-secondary-container": "#00714d",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-background": "#0b1c30",
+                    "surface-bright": "#f8f9ff",
+                    "tertiary": "#784b00",
+                    "on-tertiary-container": "#ffeedd",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-primary-fixed": "#00174b",
+                    "tertiary-fixed-dim": "#ffb95f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "xl": "32px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "base": "4px",
+                    "lg": "24px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "title-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-md": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-active-bar {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .editor-content:focus {
+            outline: none;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-surface border-r border-outline-variant flex flex-col py-lg z-50">
+<div class="px-lg mb-xl">
+<span class="text-title-lg font-title-lg font-black text-primary">Scholar LMS</span>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mt-xs">Teacher Admin</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">meeting_room</span>
+<span class="font-body-md text-body-md">Classrooms</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">book</span>
+<span class="font-body-md text-body-md">Subjects</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-primary bg-primary-fixed border-l-4 border-primary transition-all translate-x-1" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-body-md text-body-md">Lessons</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">Students</span>
+</a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-lg pt-lg border-t border-outline-variant">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden">
+<img alt="Teacher Profile" data-alt="A professional headshot of a teacher in a bright, modern office setting. The teacher has a warm, confident expression, wearing professional attire. The background is softly blurred with hints of educational books and a clean, minimalist interior design consistent with a premium corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbJmwq9fMU7HBKMXbTqY81zGoTk0qh6zEEYgmB4Grvvp9cdIGEiUtWACHrok21s7mvYx5c50dNO8p3bXri1ywNA-8BzteAZ7Hi9tlpZjr1TkbkDU8GJuvsDnNwCm3Xawl_5xj46pEDb6aZHEcZOUy7r9lwUBCP8QjmU10KdWdBCZmzU_XghXgx7J4P3xlaAdqnfZiX6-6VeVt0lfXESvf-ulN4H6PN85EoDMF_I_sceC8jpBG45t21cChU6E2jIr8drPRJoizd8Slu"/>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface">Dr. Jane Smith</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Lead Educator</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar Anchor -->
+<header class="fixed top-0 right-0 h-16 flex justify-between items-center w-[calc(100%-260px)] ml-[260px] px-lg z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-md flex-1">
+<div class="bg-surface-container-low rounded-full px-md py-xs flex items-center gap-sm border border-outline-variant w-full max-w-md">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-full" placeholder="Search lesson content..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="hover:bg-surface-container-low rounded-full p-2 text-on-surface-variant relative transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="hover:bg-surface-container-low rounded-full p-2 text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">chat</span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-sm"></div>
+<div class="flex gap-sm">
+<button class="px-md py-sm font-label-md text-label-md text-on-surface border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors">Save as Draft</button>
+<button class="px-md py-sm font-label-md text-label-md bg-primary text-on-primary rounded-lg shadow-sm hover:opacity-90 transition-opacity">Publish Lesson</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[260px] pt-16 h-screen flex overflow-hidden">
+<!-- Editor Column -->
+<div class="flex-1 flex flex-col border-r border-outline-variant bg-surface-container-lowest overflow-hidden">
+<!-- Toolbar -->
+<div class="px-lg py-sm border-b border-outline-variant bg-white flex items-center gap-xs">
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="Bold">
+<span class="material-symbols-outlined">format_bold</span>
+</button>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="Italic">
+<span class="material-symbols-outlined">format_italic</span>
+</button>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="Underline">
+<span class="material-symbols-outlined">format_underlined</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-xs"></div>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="List Bulleted">
+<span class="material-symbols-outlined">format_list_bulleted</span>
+</button>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="List Numbered">
+<span class="material-symbols-outlined">format_list_numbered</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-xs"></div>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="Insert Link">
+<span class="material-symbols-outlined">link</span>
+</button>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="Insert Image">
+<span class="material-symbols-outlined">image</span>
+</button>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="Attach File">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-xs"></div>
+<button class="p-2 hover:bg-surface-container text-on-surface-variant rounded flex items-center justify-center transition-colors" title="Code">
+<span class="material-symbols-outlined">code</span>
+</button>
+<div class="ml-auto flex items-center gap-sm">
+<span class="text-label-md font-label-md text-outline">Autosaved at 10:45 AM</span>
+</div>
+</div>
+<!-- Writing Area -->
+<div class="flex-1 overflow-y-auto p-xl custom-scrollbar">
+<div class="max-w-4xl mx-auto">
+<input class="w-full border-none focus:ring-0 font-display-lg text-display-lg bg-transparent mb-lg placeholder-outline-variant p-0" placeholder="Lesson Title..." type="text" value="Introduction to Quantum Mechanics"/>
+<div class="editor-content w-full min-h-[600px] font-body-lg text-body-lg text-on-surface-variant leading-relaxed" contenteditable="true">
+<p class="mb-md">Quantum mechanics is a fundamental theory in physics that provides a description of the physical properties of nature at the scale of atoms and subatomic particles.</p>
+<h2 class="font-headline-md text-headline-md text-on-surface mt-xl mb-md">Key Concepts</h2>
+<ul class="list-disc ml-lg mb-md space-y-sm">
+<li>Wave-particle duality</li>
+<li>The uncertainty principle</li>
+<li>Quantum superposition</li>
+<li>Quantum entanglement</li>
+</ul>
+<p class="mb-md">It is the foundation of all quantum physics including quantum chemistry, quantum field theory, quantum technology, and quantum information science.</p>
+<div class="my-lg rounded-xl overflow-hidden shadow-sm border border-outline-variant">
+<img alt="Quantum Wave Illustration" data-alt="A high-end, abstract digital illustration showing glowing wave patterns and atomic structures interweaving in a dark, navy blue cosmic space. The lighting features neon cyan and soft violet accents, creating a sense of advanced science and wonder. The style is minimalist and clean, following a modern laboratory aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbIXO89rJX9Fk-DAujvpLCHwZ-wWnqZNqYVta_LPNOvtWAqokzVBJ4djPejGJs02-LsLsm9WFUvkIcwKIwb2RgdTRuRbvjonSUcJEvPdRTUc7L2mNAGILRTpuloGif3ZjGCGIV8MPT8kp2NvUT2xfbKkJwobcQVkaZ0dgFkqDTaNGYGpBK8H2CM8vrS-hK5Ki0Q_ICLfjm2Q4XxePB5-3sL-VirfP60JNjcOPVoVd_-HkZss-WsA8R16jnUXhzHG6wrqBz75-Ir2hy"/>
+</div>
+<p class="mb-md">In today's lesson, we will explore how these subatomic rules differ from the classical physics we experience in our daily lives.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar Config Column -->
+<aside class="w-[380px] bg-surface flex flex-col overflow-y-auto custom-scrollbar">
+<!-- Settings Panel -->
+<div class="p-lg border-b border-outline-variant">
+<h3 class="font-title-md text-title-md text-on-surface mb-md">Lesson Settings</h3>
+<div class="space-y-lg">
+<div>
+<label class="block font-label-md text-label-md text-outline mb-xs uppercase">Status</label>
+<div class="relative">
+<select class="w-full bg-white border border-outline-variant rounded-lg px-md py-sm font-body-md text-body-md appearance-none focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+<option>Draft</option>
+<option selected="">Published</option>
+<option>Archived</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-outline mb-xs uppercase">Classroom</label>
+<div class="relative">
+<select class="w-full bg-white border border-outline-variant rounded-lg px-md py-sm font-body-md text-body-md appearance-none focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+<option>Physics 101 - Section A</option>
+<option>Advanced Science Gr-12</option>
+<option>Quantum Theory Seminar</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-outline mb-xs uppercase">Subject</label>
+<div class="flex flex-wrap gap-xs">
+<span class="px-sm py-1 bg-surface-container rounded-full text-label-md font-label-md text-on-surface flex items-center gap-xs">
+                                Physics <button class="material-symbols-outlined text-sm">close</button>
+</span>
+<span class="px-sm py-1 bg-surface-container rounded-full text-label-md font-label-md text-on-surface flex items-center gap-xs">
+                                Science <button class="material-symbols-outlined text-sm">close</button>
+</span>
+<button class="p-1 text-primary hover:bg-primary-fixed rounded-full transition-colors">
+<span class="material-symbols-outlined">add_circle</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Resources Panel -->
+<div class="p-lg flex-1">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-title-md text-title-md text-on-surface">Lesson Resources</h3>
+<span class="text-label-md font-label-md text-primary">3 Files</span>
+</div>
+<!-- Drag & Drop -->
+<div class="border-2 border-dashed border-outline-variant rounded-xl p-lg flex flex-col items-center justify-center text-center bg-surface-container-low hover:border-primary hover:bg-primary-fixed transition-all cursor-pointer mb-lg group" id="drop-zone">
+<span class="material-symbols-outlined text-display-lg text-outline mb-sm group-hover:text-primary transition-colors">upload_file</span>
+<p class="font-title-md text-title-md text-on-surface mb-xs">Drag &amp; Drop Files</p>
+<p class="font-body-sm text-body-sm text-outline">or <span class="text-primary font-bold">browse</span> your device</p>
+</div>
+<!-- Resource Previews -->
+<div class="space-y-md">
+<!-- PDF Item -->
+<div class="flex items-center gap-md p-md bg-white border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="w-12 h-12 rounded-lg bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-body-md text-body-md text-on-surface truncate">Lecture_Notes.pdf</p>
+<p class="font-label-md text-label-md text-outline">2.4 MB</p>
+</div>
+<button class="p-1 hover:bg-surface-container rounded transition-colors text-outline">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Image Item -->
+<div class="flex items-center gap-md p-md bg-white border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="w-12 h-12 rounded-lg bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">image</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-body-md text-body-md text-on-surface truncate">Wave_Diagram.png</p>
+<p class="font-label-md text-label-md text-outline">842 KB</p>
+</div>
+<button class="p-1 hover:bg-surface-container rounded transition-colors text-outline">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Video Item -->
+<div class="flex items-center gap-md p-md bg-white border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">movie</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-body-md text-body-md text-on-surface truncate">Lab_Experiment.mp4</p>
+<p class="font-label-md text-label-md text-outline">15.8 MB</p>
+</div>
+<button class="p-1 hover:bg-surface-container rounded transition-colors text-outline">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer Action (Responsive Bottom Bar Fallback) -->
+<div class="mt-auto p-lg bg-surface border-t border-outline-variant md:hidden">
+<button class="w-full py-md bg-primary text-on-primary rounded-xl font-title-md">Publish Changes</button>
+</div>
+</aside>
+</main>
+<script>
+        // Simple micro-interactions for the editor
+        const dropZone = document.getElementById('drop-zone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('scale-105');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('scale-105');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('scale-105');
+            alert('File upload simulation: Files received.');
+        });
+
+        // Toolbar Button Toggle States
+        const toolbarButtons = document.querySelectorAll('.toolbar-btn');
+        toolbarButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('bg-primary-fixed');
+                btn.classList.toggle('text-primary');
+            });
+        });
+
+        // Navigation simulation
+        const navItems = document.querySelectorAll('nav a');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                navItems.forEach(i => {
+                    i.classList.remove('text-primary', 'bg-primary-fixed', 'border-l-4', 'border-primary', 'translate-x-1');
+                    i.classList.add('text-on-surface-variant');
+                });
+                item.classList.add('text-primary', 'bg-primary-fixed', 'border-l-4', 'border-primary', 'translate-x-1');
+                item.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

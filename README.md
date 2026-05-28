@@ -35,6 +35,7 @@ Mặc định FE gọi API qua `VITE_API_URL=http://localhost:7070/api/v1`.
 ## Tài liệu
 
 - FE: `cell-architecture-studio/docs/REVIEW.html`, `docs/STRUCTURE.md`, `docs/ASSETS.md`
+- FE (review pack mới): `cell-architecture-studio/docs/review/README.md`
 - BE: `cell-architecture-backend/README.md`
 
 ## License

@@ -1,0 +1,2549 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cell Architecture Studio — Review &amp; Định hướng mở rộng</title>
+    <style>
+      :root {
+        --paper: #fbf7ee;
+        --paper-deep: #f1eadc;
+        --ink: #28231c;
+        --muted: #80786d;
+        --line: rgba(91, 78, 60, 0.16);
+        --accent: #4f8a3f;
+        --accent-soft: #e5f1d8;
+        --critical: #b3261e;
+        --critical-soft: #fbe7e6;
+        --warning: #b07a14;
+        --warning-soft: #fbf0d8;
+        --ok: #2f7d56;
+        --ok-soft: #dff1e6;
+        --info: #2c5fb3;
+        --info-soft: #e2ecfb;
+        --shadow: 0 18px 50px rgba(78, 66, 48, 0.12);
+        --shadow-soft: 0 8px 26px rgba(78, 66, 48, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background:
+          radial-gradient(circle at 8% 6%, rgba(255, 255, 255, 0.78), transparent 26rem),
+          linear-gradient(135deg, #f6f0e4 0%, #efe7d8 100%);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.65;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+        gap: 32px;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 40px 28px 80px;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 24px;
+        align-self: start;
+        max-height: calc(100vh - 48px);
+        overflow-y: auto;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: var(--shadow-soft);
+        padding: 22px 20px;
+      }
+
+      .sidebar h2 {
+        margin: 0 0 14px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+      }
+
+      .toc {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .toc a {
+        display: block;
+        padding: 8px 10px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--ink);
+        font-size: 14px;
+        transition: background 120ms ease, color 120ms ease;
+      }
+
+      .toc a:hover {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .toc .sub {
+        padding-left: 22px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      main {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 44px 48px;
+      }
+
+      .hero {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 32px;
+      }
+
+      .hero .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .hero h1 {
+        margin: 4px 0 6px;
+        font-family: "Iowan Old Style", "Libre Baskerville", Georgia, serif;
+        font-weight: 500;
+        font-size: 2.6rem;
+        line-height: 1.15;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 760px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--paper-deep);
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .badge.ok {
+        background: var(--ok-soft);
+        color: var(--ok);
+        border-color: transparent;
+      }
+      .badge.warn {
+        background: var(--warning-soft);
+        color: var(--warning);
+        border-color: transparent;
+      }
+      .badge.crit {
+        background: var(--critical-soft);
+        color: var(--critical);
+        border-color: transparent;
+      }
+      .badge.info {
+        background: var(--info-soft);
+        color: var(--info);
+        border-color: transparent;
+      }
+
+      .issue-resolved {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      tr.row-resolved td {
+        color: var(--muted);
+      }
+
+      tr.row-resolved td:first-child {
+        text-decoration: line-through;
+      }
+
+      h2.section {
+        margin-top: 48px;
+        margin-bottom: 10px;
+        font-family: "Iowan Old Style", "Libre Baskerville", Georgia, serif;
+        font-size: 1.8rem;
+        font-weight: 500;
+        line-height: 1.2;
+        scroll-margin-top: 24px;
+      }
+
+      h3 {
+        margin-top: 28px;
+        margin-bottom: 8px;
+        font-size: 1.15rem;
+        scroll-margin-top: 24px;
+      }
+
+      p,
+      li {
+        color: var(--ink);
+      }
+
+      .lead {
+        font-size: 1.05rem;
+        color: var(--muted);
+        margin-top: 0;
+      }
+
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        background: var(--paper-deep);
+        padding: 1px 6px;
+        border-radius: 6px;
+        font-size: 0.92em;
+      }
+
+      pre {
+        background: #1f1b13;
+        color: #f4ecd8;
+        padding: 16px 18px;
+        border-radius: 14px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0 4px;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        background: var(--paper-deep);
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .card {
+        background: var(--paper-deep);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin: 14px 0;
+      }
+
+      .card.ok {
+        background: var(--ok-soft);
+        border-color: transparent;
+      }
+      .card.warn {
+        background: var(--warning-soft);
+        border-color: transparent;
+      }
+      .card.crit {
+        background: var(--critical-soft);
+        border-color: transparent;
+      }
+      .card.info {
+        background: var(--info-soft);
+        border-color: transparent;
+      }
+
+      .card h4 {
+        margin: 0 0 6px;
+        font-size: 1rem;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+
+      .quote {
+        border-left: 4px solid var(--accent);
+        padding: 6px 14px;
+        background: var(--accent-soft);
+        border-radius: 0 10px 10px 0;
+        color: var(--ink);
+        margin: 14px 0;
+      }
+
+      footer.page-foot {
+        margin-top: 56px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--paper-deep);
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        margin-bottom: 28px;
+      }
+
+      .tabs button {
+        flex: 1;
+        padding: 10px 14px;
+        background: transparent;
+        border: 0;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+      }
+
+      .tabs button:hover {
+        color: var(--ink);
+      }
+
+      .tabs button.is-active {
+        background: var(--paper);
+        color: var(--accent);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.is-active {
+        display: block;
+        animation: fade-in 220ms ease both;
+      }
+
+      .toc-group {
+        display: none;
+      }
+
+      .toc-group.is-active {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* ASCII diagram helper */
+      .ascii {
+        background: var(--paper-deep);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        line-height: 1.55;
+        white-space: pre;
+        overflow-x: auto;
+        color: var(--ink);
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 10px 0 4px;
+      }
+
+      .pill {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--paper-deep);
+        border: 1px solid var(--line);
+        color: var(--ink);
+      }
+
+      .callout {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        background: var(--info-soft);
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin: 14px 0;
+      }
+
+      .callout strong {
+        color: var(--info);
+      }
+
+      @media (max-width: 960px) {
+        .layout {
+          grid-template-columns: 1fr;
+          padding: 20px 14px 60px;
+        }
+
+        .sidebar {
+          position: static;
+          max-height: none;
+        }
+
+        main {
+          padding: 28px 22px;
+        }
+
+        .hero h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>Mục lục</h2>
+        <ul class="toc toc-group is-active" data-toc="review">
+          <li><a href="#overview">1. Tổng quan</a></li>
+          <li><a href="#stack">2. Tech stack &amp; kiến trúc</a></li>
+          <li class="sub"><a href="#stack-backend">2.1 Backend API</a></li>
+          <li><a href="#strengths">3. Những phần đang ổn</a></li>
+          <li><a href="#issues">4. Vấn đề còn tồn đọng</a></li>
+          <li class="sub"><a href="#issues-resolved">4.0 Đã xử lý</a></li>
+          <li class="sub"><a href="#issues-critical">4.1 Nghiêm trọng</a></li>
+          <li class="sub"><a href="#issues-medium">4.2 Trung bình</a></li>
+          <li class="sub"><a href="#issues-low">4.3 Thấp</a></li>
+          <li><a href="#performance">5. Hiệu năng &amp; scale</a></li>
+          <li><a href="#expand">6. Mở rộng đa môn học</a></li>
+          <li class="sub"><a href="#expand-data">6.1 Mô hình dữ liệu</a></li>
+          <li class="sub"><a href="#expand-arch">6.2 Kiến trúc đề xuất</a></li>
+          <li class="sub"><a href="#expand-admin">6.3 Trang admin / CMS</a></li>
+          <li><a href="#roadmap">7. Roadmap đề xuất</a></li>
+          <li><a href="#srs">8. SRS &amp; thiết kế DB</a></li>
+          <li class="sub"><a href="#srs-scope">8.1 Mục tiêu &amp; phạm vi</a></li>
+          <li class="sub"><a href="#srs-actors">8.2 Tác nhân</a></li>
+          <li class="sub"><a href="#srs-stories">8.3 User stories</a></li>
+          <li class="sub"><a href="#srs-erd">8.4 ERD &amp; quan hệ bảng</a></li>
+          <li class="sub"><a href="#srs-tables">8.5 Chi tiết bảng</a></li>
+          <li class="sub"><a href="#srs-mapping">8.6 Map từ CellItem</a></li>
+          <li class="sub"><a href="#srs-phases">8.7 Triển khai theo giai đoạn</a></li>
+          <li><a href="#risks">9. Rủi ro &amp; cân nhắc</a></li>
+          <li><a href="#review-pack">10. Review pack (Teacher/Student)</a></li>
+          <li><a href="#execution-plan">11. Kế hoạch triển khai từng bước</a></li>
+        </ul>
+        <ul class="toc toc-group" data-toc="basics">
+          <li><a href="#b-glb">1. GLB là gì?</a></li>
+          <li><a href="#b-inside">2. Bên trong file GLB</a></li>
+          <li><a href="#b-size">3. Tại sao GLB to?</a></li>
+          <li><a href="#b-flow">4. Cách project dùng GLB</a></li>
+          <li><a href="#b-vocab">5. Từ vựng 3D cơ bản</a></li>
+          <li><a href="#b-tools">6. Công cụ xem &amp; phân tích</a></li>
+          <li><a href="#b-subjects">7. Mỗi môn dùng gì?</a></li>
+          <li><a href="#b-faq">8. Câu hỏi thường gặp</a></li>
+        </ul>
+      </aside>
+
+      <main>
+        <div class="hero">
+          <span class="eyebrow">Architecture Review</span>
+          <h1>Cell Architecture Studio</h1>
+          <p>
+            Tổng hợp đánh giá hiện trạng và định hướng mở rộng dự án thành một nền tảng học liệu tương tác đa môn
+            học (Sinh, Hóa, Lý...) với trang quản trị riêng cho giáo viên / nội dung.
+          </p>
+          <div class="meta">
+            <span class="badge ok">FE refactor + admin user</span>
+            <span class="badge ok">BE đã bỏ module email</span>
+            <span class="badge warn">Cần xử lý bundle GLB</span>
+            <span class="badge crit">Chưa sẵn sàng scale đa môn</span>
+            <span class="badge info">CMS bài học 3D chưa có</span>
+            <span class="badge info">SRS &amp; ERD (mục 8)</span>
+          </div>
+        </div>
+
+        <nav class="tabs" role="tablist">
+          <button type="button" role="tab" class="is-active" data-tab="review" aria-selected="true">
+            Review dự án
+          </button>
+          <button type="button" role="tab" data-tab="basics" aria-selected="false">
+            3D &amp; GLB cơ bản
+          </button>
+        </nav>
+
+        <section class="tab-panel is-active" data-panel="review" role="tabpanel">
+        <!-- 1. TỔNG QUAN -->
+        <h2 class="section" id="overview">1. Tổng quan hệ thống</h2>
+        <p class="lead">
+          Dự án hiện tại là một <strong>SPA (single page application)</strong> dạng gallery học liệu 3D về cấu trúc
+          tế bào. Người dùng chọn 1 trong 7 loại tế bào, xoay/zoom mô hình 3D, mở chi tiết organelle, và so sánh
+          giữa các tế bào. Mục tiêu là cảm giác như một phòng thí nghiệm ảo mini cho học sinh sinh học.
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h4>Phạm vi hiện tại</h4>
+            <ul>
+              <li>7 specimen tế bào (animal, plant, neuron, bacteria, white blood, epithelial, muscle).</li>
+              <li>5 model GLB thật + 2 model procedural (Three.js sinh hình tại runtime).</li>
+              <li>Sidebar Cell Types &amp; Organelles, Stage 3D với 2 view mode (<code>mesh</code>, <code>focus</code>), Right panel chi tiết + AI Tutor placeholder, panel Microscope, panel Compare Cells.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h4>Đối tượng đang phục vụ</h4>
+            <ul>
+              <li>Học sinh / giáo viên môn Sinh học (THCS &mdash; THPT).</li>
+              <li>Người tự học muốn quan sát tế bào ở dạng 3D thay vì hình vẽ 2D SGK.</li>
+              <li>Hiện chưa có flow đa người dùng (mọi người thấy cùng một nội dung tĩnh).</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 2. STACK -->
+        <h2 class="section" id="stack">2. Tech stack &amp; kiến trúc hiện tại</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Tools</th>
+              <th>Đánh giá</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>App</td>
+              <td>React 19, TypeScript 5.9 (strict), Vite 7.2</td>
+              <td><span class="badge ok">Hiện đại</span></td>
+            </tr>
+            <tr>
+              <td>3D</td>
+              <td>three 0.181, @react-three/fiber 9, @react-three/drei 10</td>
+              <td><span class="badge ok">Chuẩn industry</span></td>
+            </tr>
+            <tr>
+              <td>Routing</td>
+              <td>react-router-dom 7 &mdash; <code>src/app/routes.tsx</code></td>
+              <td><span class="badge ok">Gallery + login + admin user</span></td>
+            </tr>
+            <tr>
+              <td>UI</td>
+              <td>CSS thuần (<code>src/styles.css</code> + <code>src/styles/index.css</code>), lucide-react</td>
+              <td><span class="badge warn">Khó tái sử dụng khi mở rộng</span></td>
+            </tr>
+            <tr>
+              <td>Data</td>
+              <td><code>src/data/schema/cell.ts</code> + <code>src/data/biology/cells.ts</code> (barrel <code>cells.ts</code>)</td>
+              <td><span class="badge crit">Không scale được khi đa môn</span></td>
+            </tr>
+            <tr>
+              <td>Verification</td>
+              <td>playwright-core + pngjs (pixel metrics)</td>
+              <td><span class="badge ok">Sáng tạo, hữu ích</span></td>
+            </tr>
+            <tr>
+              <td>State</td>
+              <td>Gallery: <code>useCellViewer</code>; Admin/auth: Redux (<code>redux/</code>)</td>
+              <td><span class="badge ok">Tách theo miền</span></td>
+            </tr>
+            <tr>
+              <td>API / Auth (FE)</td>
+              <td>Axios + JWT (<code>shared/api/</code>) &rarr; <code>localhost:7070/api/v1</code></td>
+              <td><span class="badge ok">Login, register, CRUD user</span></td>
+            </tr>
+            <tr>
+              <td>Backend API</td>
+              <td><code>cell-architecture-backend</code> &mdash; Spring Boot 3.2, JPA, MySQL, JWT</td>
+              <td><span class="badge ok">Auth + user + file upload</span></td>
+            </tr>
+            <tr>
+              <td>Backend (nội dung học)</td>
+              <td>Nội dung Sinh vẫn tĩnh trong <code>data/biology/</code> (FE)</td>
+              <td><span class="badge warn">CMS lesson/cell chưa có trên BE</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Cấu trúc thư mục hiện tại</h3>
+        <p class="lead">
+          <strong>Một Vite app, một source</strong> &mdash; gallery công khai và khung <code>/admin</code> cùng repo.
+          Chi tiết route xem <code>docs/STRUCTURE.md</code>.
+        </p>
+        <pre><code>cell_architecture/                 (workspace gợi ý)
+├── cell-architecture-studio/      (FE &mdash; repo này)
+├── cell-architecture-backend/     (BE &mdash; Spring Boot, port 7070)
+└── …
+
+cell-architecture-studio/
+├── docs/
+│   ├── ASSETS.md
+│   ├── REVIEW.html
+│   ├── STRUCTURE.md                 (mô tả layout src &amp; routes)
+│   └── media/
+├── public/
+│   ├── cell-renders/                (thumbnails)
+│   ├── cell-renders-transparent/
+│   ├── models/                      (~115 MB GLB &mdash; CẢNH BÁO)
+│   └── nih-previews/
+├── scripts/verify.mjs
+└── src/
+    ├── main.tsx                     (StrictMode + Router)
+    ├── app/
+    │   ├── App.tsx                  (RouterProvider)
+    │   └── routes.tsx               (/biology/*, /login, /admin/*)
+    ├── layouts/
+    │   ├── PublicLayout.tsx
+    │   └── admin/                   (MUI AdminLayout, sidebar)
+    ├── pages/
+    │   ├── public/biology/CellViewerPage.tsx
+    │   ├── auth/LoginPage.tsx, RegisterPage.tsx
+    │   └── admin/ManageUserPage.tsx, AdminDashboardPage.tsx
+    ├── shared/api/, shared/auth/   (axios, JWT, RequireAuth)
+    ├── features/
+    │   └── biology/
+    │       ├── components/          (Header, Sidebar, Stage, RightPanel, …)
+    │       ├── hooks/useCellViewer.ts
+    │       └── constants.ts
+    ├── components/
+    │   ├── CellScene.tsx            (~1020 dòng &mdash; canvas + models)
+    │   └── three/CellScene.tsx      (re-export)
+    ├── data/
+    │   ├── schema/cell.ts           (types: CellItem, ViewMode, …)
+    │   ├── biology/cells.ts         (nội dung tĩnh 8 specimen)
+    │   ├── biology/index.ts
+    │   ├── cells.ts                 (barrel tương thích import cũ)
+    │   └── index.ts
+    ├── shared/pages/RoutePlaceholder.tsx
+    ├── styles/
+    │   └── index.css                (entry &rarr; import ../styles.css)
+    └── styles.css                   (~1400 dòng &mdash; global)</code></pre>
+
+        <p><strong>Routes FE đã đăng ký:</strong></p>
+        <ul>
+          <li><code>/</code> &rarr; <code>/biology/cells</code></li>
+          <li><code>/biology/cells</code>, <code>/biology/cells/:cellId</code> &mdash; gallery 3D</li>
+          <li><code>/login</code>, <code>/register</code></li>
+          <li><code>/admin</code> &rarr; <code>/admin/manage-user</code> (CRUD user, <code>RequireAuth</code>)</li>
+        </ul>
+
+        <h3 id="stack-backend">2.1 Backend API (<code>cell-architecture-backend</code>)</h3>
+        <p class="lead">
+          Repo BE tách riêng, port từ mailer/jobhunter, <strong>đã gỡ toàn bộ module email</strong> (Gmail, label, SMTP, Thymeleaf job template).
+          Package: <code>com.cellarchitecture.api</code> &mdash; lớp chính <code>CellArchitectureApplication</code>.
+        </p>
+        <table>
+          <thead>
+            <tr><th>Thành phần</th><th>Chi tiết</th><th>Trạng thái</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Auth</td>
+              <td><code>POST /api/v1/auth/login|register|refresh|logout</code>, JWT + refresh cookie</td>
+              <td><span class="badge ok">Giữ</span></td>
+            </tr>
+            <tr>
+              <td>User</td>
+              <td><code>GET/POST/PUT/DELETE /api/v1/users</code>, <code>/user</code>, <code>/user-by-admin</code></td>
+              <td><span class="badge ok">Giữ</span></td>
+            </tr>
+            <tr>
+              <td>File</td>
+              <td><code>POST/GET /api/v1/files</code> &mdash; upload tĩnh (chuẩn bị CMS/GLB)</td>
+              <td><span class="badge ok">Giữ</span></td>
+            </tr>
+            <tr>
+              <td>Email / Label</td>
+              <td><code>EmailController</code>, <code>domain/email/*</code>, SMTP, <code>/api/v1/labels</code></td>
+              <td><span class="badge crit">Đã xóa</span></td>
+            </tr>
+            <tr>
+              <td>Skill / Permission</td>
+              <td>Legacy jobhunter (CRUD skill, permission matrix)</td>
+              <td><span class="badge warn">Còn code; FE chưa dùng</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <pre><code>cell-architecture-backend/
+├── build.gradle.kts              (group: com.cellarchitecture)
+├── src/main/java/com/cellarchitecture/api/
+│   ├── CellArchitectureApplication.java
+│   ├── controller/  AuthController, UserController, FileController
+│   ├── service/       UserService, FileService, …
+│   └── config/        SecurityConfiguration (JWT)
+└── src/main/resources/application.properties
+    server.port=7070
+    DB: cell_architecture
+    storage: cell-architecture-storage</code></pre>
+        <p>
+          <strong>Chưa làm trên BE:</strong> field <code>role</code> trên entity <code>User</code> (FE admin gửi <code>role</code> nhưng BE chưa lưu);
+          API CMS <code>Subject / Lesson / Asset</code>; dọn bảng email cũ trong MySQL nếu migrate từ DB <code>emailer</code>.
+        </p>
+
+        <div class="quote">
+          FE gallery tách khỏi monolith <code>App.tsx</code>; BE tách khỏi mailer. <strong>Nội dung Sinh vẫn file tĩnh trên FE.</strong>
+          Bước tiếp: mở rộng BE + <code>/admin/*</code> cho lesson/asset (mục 6).
+        </div>
+
+        <!-- 3. ĐIỂM MẠNH -->
+        <h2 class="section" id="strengths">3. Những phần đang ổn</h2>
+
+        <div class="grid-2">
+          <div class="card ok">
+            <h4>Tách dữ liệu / view sạch</h4>
+            <p>
+              Types trong <code>data/schema/cell.ts</code>, nội dung trong <code>data/biology/cells.ts</code> &mdash; view
+              (<code>features/biology</code>) import qua barrel <code>data/cells.ts</code> hoặc <code>data/index.ts</code>.
+            </p>
+          </div>
+          <div class="card ok">
+            <h4>TypeScript strict, không có lỗi lint</h4>
+            <p>
+              <code>tsconfig.app.json</code> bật <code>strict</code>, <code>forceConsistentCasingInFileNames</code>,
+              <code>isolatedModules</code>. Đây là nền móng tốt để refactor sau này không sợ vỡ silently.
+            </p>
+          </div>
+          <div class="card ok">
+            <h4>Fallback procedural an toàn</h4>
+            <p>
+              Khi không có GLB, vẫn dựng được hình từ <code>RoundedBox</code>, <code>capsuleGeometry</code>,
+              <code>CatmullRomCurve3 + TubeGeometry</code>. Người dùng không bao giờ thấy màn hình trắng.
+            </p>
+          </div>
+          <div class="card ok">
+            <h4>Loader UX có progress thật</h4>
+            <p>
+              <code>&lt;Suspense fallback={&lt;ModelLoadingOverlay /&gt;}&gt;</code> + <code>useProgress()</code> của drei
+              &rarr; người dùng thấy phần trăm tải mỗi khi mở GLB nặng.
+            </p>
+          </div>
+          <div class="card ok">
+            <h4>Verification bằng pixel metrics</h4>
+            <p>
+              <code>scripts/verify.mjs</code> kiểm tra <code>nonPaperRatio</code>, <code>variance</code>,
+              <code>boundingBox</code> trên 3 viewport. Đây là cách rất hiệu quả để bắt regression "canvas trắng" hoặc
+              layout vỡ &mdash; ít dự án nhỏ làm được mức này.
+            </p>
+          </div>
+          <div class="card ok">
+            <h4>License và provenance rõ ràng</h4>
+            <p>
+              MIT cho code, <code>docs/ASSETS.md</code> ghi rõ nguồn từng model (NIH 3D). Hợp pháp ngay từ đầu &mdash; rất
+              quan trọng nếu sau này thương mại hóa cho trường học.
+            </p>
+          </div>
+          <div class="card ok">
+            <h4>Admin &amp; API</h4>
+            <p>
+              FE: login, <code>ManageUserPage</code>, <code>RequireAuth</code>. BE:
+              <code>cell-architecture-backend</code> (JWT, user CRUD) &mdash; không còn module email.
+            </p>
+          </div>
+        </div>
+
+        <!-- 4. VẤN ĐỀ -->
+        <h2 class="section" id="issues">4. Vấn đề còn tồn đọng</h2>
+
+        <p class="lead">
+          Cập nhật sau refactor FE (<code>src/</code>, React Router, admin user) và BE
+          (<code>cell-architecture-backend</code> &mdash; bỏ module email, đổi package <code>com.cellarchitecture.api</code>).
+        </p>
+
+        <h3 id="issues-resolved">4.0 Đã xử lý hoặc cải thiện đáng kể</h3>
+
+        <div class="grid-2">
+          <div class="card ok">
+            <h4>Kiến trúc &amp; routing</h4>
+            <ul>
+              <li>Bỏ monolith <code>App.tsx</code> (~730 dòng) &rarr; <code>features/biology/*</code>, <code>pages/public/biology/CellViewerPage.tsx</code>.</li>
+              <li>React Router: <code>/biology/cells</code>, <code>/biology/cells/:cellId</code>, <code>/login</code>, <code>/register</code>, <code>/admin/manage-user</code>.</li>
+              <li>Admin layout MUI (<code>layouts/admin/</code>), lazy load, tách khỏi gallery 3D.</li>
+            </ul>
+          </div>
+          <div class="card ok">
+            <h4>API, auth, quản trị user (FE + BE)</h4>
+            <ul>
+              <li>FE <code>shared/api/</code> &rarr; BE <code>cell-architecture-backend</code> (:7070).</li>
+              <li>Login / register, <code>RequireAuth</code>, <code>ManageUserPage</code>.</li>
+              <li>BE đã gỡ Gmail/email; giữ auth + user + file upload.</li>
+            </ul>
+          </div>
+          <div class="card ok">
+            <h4>Data &amp; state gallery</h4>
+            <ul>
+              <li>Types <code>data/schema/cell.ts</code>, nội dung <code>data/biology/cells.ts</code>.</li>
+              <li>State gallery gom vào <code>useCellViewer</code> thay vì rải trong <code>App.tsx</code>.</li>
+            </ul>
+          </div>
+          <div class="card ok">
+            <h4>UX / code nhỏ (FE)</h4>
+            <ul>
+              <li>Toast export/screenshot trong <code>Stage.tsx</code> đổi sang tiếng Anh (không còn tiếng Trung).</li>
+              <li>Xóa import <code>Microscope</code> thừa từ lucide (khi tách component).</li>
+            </ul>
+          </div>
+          <div class="card ok">
+            <h4>GPU / CellScene (FE)</h4>
+            <ul>
+              <li><code>AssetCellModel</code>: <code>disposeMeshMaterials</code> + <code>disposeClonedScene</code> trong <code>useEffect</code> khi đổi cell/viewMode/crossSection.</li>
+              <li>Không <code>texture.dispose()</code> trên map dùng chung cache <code>useGLTF</code>.</li>
+            </ul>
+          </div>
+          <div class="card ok">
+            <h4>Backend mailer &rarr; Cell Architecture</h4>
+            <ul>
+              <li>Xóa module email: controller, service, <code>domain/email/*</code>, DTO, SMTP, Thymeleaf <code>job.html</code>.</li>
+              <li>Đổi tên: <code>EmailAppApplication</code> &rarr; <code>CellArchitectureApplication</code>; DB mặc định <code>cell_architecture</code>.</li>
+              <li>Giữ contract FE: <code>/api/v1/auth/*</code>, <code>/api/v1/users</code>, <code>/api/v1/files</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 id="issues-critical">4.1 Mức nghiêm trọng (cần xử lý trước khi production)</h3>
+
+        <div class="card crit">
+          <h4>1. Bundle GLB hơn 110&nbsp;MB &mdash; sẽ phá vỡ trải nghiệm khi scale</h4>
+          <p>
+            <code>public/models/plant-cell-first001.glb</code> ≈ 56.5&nbsp;MB,
+            <code>public/models/white-blood-cell-user.glb</code> ≈ 53.9&nbsp;MB. Toàn bộ <code>public/</code> sẽ copy
+            thẳng vào <code>dist/</code>. Trên 4G của học sinh, lần load đầu sẽ mất 30s&ndash;2 phút và rất tốn data.
+            Vercel free tier cũng dễ bị quá quota bandwidth khi traffic tăng.
+          </p>
+          <strong>Cách xử lý:</strong>
+          <ul>
+            <li>Nén GLB bằng <strong>Draco</strong> hoặc <strong>Meshopt</strong> (thường giảm 5&ndash;10 lần).</li>
+            <li>Đưa các GLB nặng lên <strong>CDN riêng</strong> (Cloudflare R2 / S3 / Bunny CDN) thay vì commit vào repo.</li>
+            <li>Lazy load: chỉ tải GLB khi user chọn cell đó, không preload đồng loạt.</li>
+            <li>Sinh ra LOD (3 mức chi tiết) và chọn theo viewport size.</li>
+          </ul>
+        </div>
+
+        <div class="card crit">
+          <h4>2. Mô hình dữ liệu hiện tại không scale được đa môn</h4>
+          <p>
+            <code>data/biology/cells.ts</code> hard-code mảng <code>CellItem[]</code>. Khi muốn thêm môn Hóa (phân tử nước, bảng tuần
+            hoàn), Lý (điện trường, lăng kính), bạn không thể nhét vào schema <code>CellItem</code>. Mỗi môn có loại
+            asset, loại tương tác, loại metadata rất khác nhau.
+          </p>
+          <strong>Cách xử lý:</strong> tách thành mô hình phân cấp <code>Subject &rarr; Topic &rarr; Lesson &rarr; Asset</code>,
+          chuyển sang backend có database. Xem chi tiết ở <a href="#expand-data">mục 6.1</a>.
+        </div>
+
+        <div class="card warn">
+          <h4>3. Nội dung học liệu 3D vẫn tĩnh &mdash; admin user có, CMS bài chưa</h4>
+          <p>
+            <strong>Đã có:</strong> đăng nhập, quản lý user qua API (<code>/admin/manage-user</code>).<br />
+            <strong>Chưa có:</strong> giáo viên tự thêm/sửa cell, GLB, organelle qua UI &mdash; vẫn phải sửa
+            <code>data/biology/cells.ts</code> và deploy lại.
+          </p>
+          <strong>Cách xử lý tiếp:</strong> API + CMS cho <code>Subject / Lesson / Asset</code> (mục 6), object storage cho GLB.
+        </div>
+
+        <div class="card ok">
+          <h4>4. Memory leak khi switch cell GLB <span class="badge ok">Đã xử lý (FE)</span></h4>
+          <p>
+            <code>CellScene.tsx</code> &mdash; <code>disposeClonedScene</code> + cleanup <code>useEffect</code> khi <code>clonedScene</code> đổi/unmount.
+            Vẫn nên test trên iPad/Chromebook sau nhiều lần đổi cell.
+          </p>
+        </div>
+
+        <h3 id="issues-medium">4.2 Mức trung bình</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Trạng thái</th>
+              <th>Vấn đề</th>
+              <th>Vị trí</th>
+              <th>Hướng xử lý</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-resolved">
+              <td><span class="badge ok">Đã xử lý</span></td>
+              <td>Toast tiếng Trung lẫn trong UI tiếng Anh</td>
+              <td><code>features/biology/components/Stage.tsx</code></td>
+              <td>Đã đổi message sang EN; i18n sau nếu cần.</td>
+            </tr>
+            <tr class="row-resolved">
+              <td><span class="badge ok">Một phần</span></td>
+              <td><code>App.tsx</code> quá lớn (~730 dòng)</td>
+              <td><code>features/biology/components/*</code></td>
+              <td>Gallery đã tách; <code>CellScene.tsx</code> vẫn ~1000 dòng (xem dòng dưới).</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td><code>&lt;span role="button"&gt;</code> nằm trong <code>&lt;button&gt;</code></td>
+              <td><code>features/biology/components/Sidebar.tsx</code></td>
+              <td>Tách favorite ra ngoài <code>cell-row</code> hoặc đổi cell-row thành <code>div</code>.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td>"Cross Section" thật ra chỉ là giảm opacity</td>
+              <td><code>components/CellScene.tsx</code> CellMaterial</td>
+              <td>Đổi label thành "X-Ray", hoặc dùng <code>renderer.clippingPlanes</code> thật.</td>
+            </tr>
+            <tr class="row-resolved">
+              <td><span class="badge ok">Đã xử lý</span></td>
+              <td>Memory leak GPU khi đổi cell GLB</td>
+              <td><code>src/components/CellScene.tsx</code> (<code>AssetCellModel</code>)</td>
+              <td><code>disposeClonedScene</code> + <code>useEffect</code> cleanup.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td><code>CellScene.tsx</code> vẫn ~1000 dòng</td>
+              <td><code>src/components/CellScene.tsx</code></td>
+              <td>Tách <code>components/three/models/*.tsx</code> theo từng loại cell.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td>BE: <code>User</code> chưa có field <code>role</code></td>
+              <td><code>cell-architecture-backend</code></td>
+              <td>Thêm role enum + map JWT/FE <code>ManageUserPage</code>.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td>BE: Skill/Permission legacy jobhunter</td>
+              <td>Backend controllers</td>
+              <td>Gỡ hoặc giữ tùy RBAC sau này.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td>Không có ESLint / Prettier / git hook</td>
+              <td>Project root</td>
+              <td>Thêm <code>eslint</code> + <code>@typescript-eslint</code> + <code>prettier</code> + <code>lint-staged</code>.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Một phần</span></td>
+              <td>Bundle chính không tách chunks</td>
+              <td><code>vite.config.ts</code></td>
+              <td>Admin layout đã <code>lazy</code>; thêm <code>manualChunks</code> cho <code>three</code> / MUI.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td><code>verify.mjs</code> hard-code path Chrome macOS</td>
+              <td><code>scripts/verify.mjs</code></td>
+              <td>Playwright full package hoặc detect OS.</td>
+            </tr>
+            <tr>
+              <td><span class="badge warn">Còn</span></td>
+              <td>Không có unit test</td>
+              <td>&mdash;</td>
+              <td>Vitest cho <code>getCellById</code>, API unwrap, auth token helpers.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="issues-low">4.3 Mức thấp / tinh chỉnh</h3>
+        <ul>
+          <li class="issue-resolved"><span class="badge ok">Đã xử lý</span> Import <code>Microscope</code> thừa từ lucide (đã xóa khi tách component).</li>
+          <li><code>toastTimer</code> trong <code>useCellViewer</code> &mdash; vẫn chưa cleanup khi unmount page (ảnh hưởng nhỏ).</li>
+          <li><code>favorites</code> khởi tạo đã có <code>initialCell.id</code> &mdash; người dùng chưa làm gì đã thấy "đã thích".</li>
+          <li><code>&lt;Float&gt;</code> wrap quanh model có sẵn <code>autoRotate</code> &mdash; 2 hiệu ứng lắc/xoay đè lên nhau, model nặng có thể "rung".</li>
+          <li><code>sourceUrl: "local:/Users/lank/Downloads/..."</code> trong <code>data/biology/cells.ts</code> &mdash; nên đổi label trung lập.</li>
+          <li>Không có favicon, không có Open Graph meta tags &mdash; khi share link ra Zalo / Facebook không có preview đẹp.</li>
+        </ul>
+
+        <!-- 5. HIỆU NĂNG -->
+        <h2 class="section" id="performance">5. Hiệu năng &amp; khả năng scale</h2>
+
+        <p class="lead">
+          Đây là phần quan trọng nhất nếu bạn định mở rộng. Hiện tại app chạy mượt khi <em>1 người dùng, 1 máy
+          desktop, đã cache</em>. Nhưng khi scale lên <em>nhiều người, nhiều môn, nhiều thiết bị yếu, đường truyền
+          kém</em> &mdash; mỗi điểm dưới đây sẽ trở thành bottleneck:
+        </p>
+
+        <h3>Bottleneck client-side</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Bottleneck</th>
+              <th>Tác động khi scale</th>
+              <th>Giải pháp</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GLB không nén</td>
+              <td>Học sinh dùng 3G chờ 1&ndash;2 phút &rarr; bỏ.</td>
+              <td>Draco/Meshopt + CDN + lazy load.</td>
+            </tr>
+            <tr>
+              <td>Mọi cell load đồng thời nếu user lướt nhanh</td>
+              <td>Chiếm RAM / VRAM &rarr; lag, treo trên thiết bị yếu.</td>
+              <td>Chỉ giữ 1 cell active, dispose phần còn lại.</td>
+            </tr>
+            <tr>
+              <td>Không có service worker / cache</td>
+              <td>Mỗi lần vào lại trang đều tải lại GLB.</td>
+              <td>PWA + cache-first cho asset 3D.</td>
+            </tr>
+            <tr>
+              <td>Không có code splitting</td>
+              <td>JS chính sẽ nặng khi thêm môn Hóa/Lý.</td>
+              <td>Lazy import từng module môn học bằng <code>React.lazy</code> + <code>Suspense</code>.</td>
+            </tr>
+            <tr>
+              <td>Render full canvas 60fps liên tục</td>
+              <td>Pin laptop / điện thoại nóng nhanh.</td>
+              <td>Bật <code>frameloop="demand"</code> của R3F, render khi có thay đổi.</td>
+            </tr>
+            <tr>
+              <td>Không có giới hạn DPR trên mobile</td>
+              <td>Retina mobile vẽ ở DPR=3 &rarr; thiêu GPU.</td>
+              <td>Đã có <code>dpr={[1, 2]}</code>, có thể hạ xuống <code>[1, 1.5]</code> trên mobile yếu.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Bottleneck server-side (khi có backend cho admin / đa môn)</h3>
+        <ul>
+          <li><strong>Asset storage</strong>: không lưu GLB trong PostgreSQL/MySQL &mdash; phải dùng object storage (R2/S3) + cấu hình CORS.</li>
+          <li><strong>CDN edge</strong>: bắt buộc cho asset 3D. Mỗi GLB nén còn 5&ndash;10&nbsp;MB nhân với hàng nghìn lượt tải/ngày &rarr; đau ví nếu chạy thẳng từ origin.</li>
+          <li><strong>Database read</strong>: cấu trúc <code>Subject &rarr; Topic &rarr; Lesson</code> sẽ có nhiều join, cần index hợp lý + pagination từ đầu.</li>
+          <li><strong>Auth</strong>: nếu định cho giáo viên/học sinh login, cân nhắc <code>Supabase Auth</code>, <code>Clerk</code>, <code>Auth0</code> &mdash; đừng tự viết.</li>
+          <li><strong>Quota theo trường</strong>: nếu bán cho trường, mỗi tenant cần quota storage/bandwidth riêng để tính phí công bằng.</li>
+        </ul>
+
+        <h3>SEO &amp; truy cập</h3>
+        <p>
+          Vite SPA hiện không có SSR &mdash; Google index kém. Nếu định làm SEO cho landing môn học, nên chuyển sang
+          <strong>Next.js</strong> (App Router) hoặc <strong>Astro</strong> với "island" cho phần 3D. Phần 3D vẫn chạy
+          client-side, nhưng metadata + nội dung tĩnh được prerender &rarr; chia sẻ link đẹp, search engine hiểu được.
+        </p>
+
+        <!-- 6. MỞ RỘNG ĐA MÔN -->
+        <h2 class="section" id="expand">6. Mở rộng đa môn học (Sinh / Hóa / Lý)</h2>
+
+        <h3 id="expand-data">6.1 Mô hình dữ liệu đề xuất</h3>
+        <p>
+          Hiện tại tất cả là <code>cells.ts</code>. Khi mở rộng, nên dùng phân cấp 4 tầng.
+          <strong>Bản SRS đầy đủ, ERD và mapping bảng:</strong> <a href="#srs">mục 8</a>.
+        </p>
+        <pre><code>Subject       (Sinh, Hóa, Lý, ...)
+  └─ Topic     (Tế bào, Cơ thể người, Phản ứng axit-bazơ, Quang học, ...)
+       └─ Lesson   (Tế bào động vật, Nguyên tử Natri, Thấu kính hội tụ, ...)
+            └─ Asset/Interactive   (GLB, molecule viewer, simulation, quiz, ...)</code></pre>
+
+        <p>Ví dụ schema TypeScript chung cho mọi môn:</p>
+        <pre><code>type SubjectId = "biology" | "chemistry" | "physics";
+
+type Lesson = {
+  id: string;
+  subjectId: SubjectId;
+  topicId: string;
+  title: string;
+  summary: string;
+  // Loại trình diễn &mdash; mỗi loại có UI / engine riêng
+  presentation:
+    | { kind: "cell3d"; modelUrl: string; organelles: Organelle[] }
+    | { kind: "molecule"; format: "mol" | "pdb" | "sdf"; data: string }
+    | { kind: "simulation"; engineId: string; params: Record&lt;string, number&gt; }
+    | { kind: "diagram"; svgUrl: string; hotspots: Hotspot[] };
+  quiz?: QuizQuestion[];
+  prerequisites?: string[]; // id của lesson khác
+};</code></pre>
+
+        <div class="quote">
+          Pattern này được gọi là <strong>discriminated union</strong> &mdash; TypeScript sẽ ép bạn xử lý đúng loại
+          <code>presentation</code>. Đây là cách bền vững nhất để giữ type-safe khi thêm môn mới.
+        </div>
+
+        <h3 id="expand-arch">6.2 Kiến trúc đề xuất</h3>
+        <pre><code>apps/
+├── web/                       (Next.js hoặc Vite + React Router, public site)
+│   └── src/
+│       ├── subjects/
+│       │   ├── biology/       (cell viewer, body system, ...)
+│       │   ├── chemistry/     (molecule viewer, periodic table, reactions)
+│       │   └── physics/       (optics sim, circuits, mechanics)
+│       ├── core/              (renderer chung, layout, header, auth UI)
+│       └── routes/
+└── admin/                     (Next.js, có auth bắt buộc)
+    └── src/
+        ├── subjects/          (CRUD)
+        ├── lessons/
+        └── assets/
+
+packages/
+├── ui/                        (design system dùng chung 2 app)
+├── data-schema/               (Zod schema + TS types &mdash; nguồn duy nhất)
+├── renderer-3d/               (CellScene tổng quát, không gắn với "cell")
+└── api-client/                (typed client gọi backend)
+
+services/
+└── api/                       (Node/Nest hoặc Hono + Prisma + Postgres)</code></pre>
+
+        <p>
+          Đề xuất là <strong>monorepo</strong> (pnpm workspaces hoặc Turborepo) vì:
+        </p>
+        <ul>
+          <li>App public và admin chia sẻ schema, design system, API client.</li>
+          <li>Bạn có thể tách deploy độc lập (admin login chặt hơn, deploy ít hơn).</li>
+          <li>Khi thêm môn mới, chỉ thêm 1 folder trong <code>subjects/</code>, code splitting tự nhiên theo route.</li>
+        </ul>
+
+        <h3 id="expand-admin">6.3 Trang admin / CMS</h3>
+        <p>Có 2 hướng chính, mỗi hướng có trade-off khác nhau:</p>
+
+        <div class="grid-2">
+          <div class="card info">
+            <h4>Option A &mdash; Headless CMS có sẵn</h4>
+            <p>
+              Dùng <strong>Strapi</strong>, <strong>Directus</strong>, hoặc <strong>Payload CMS</strong>. Bạn định
+              nghĩa collection, CMS tự sinh REST/GraphQL + UI admin.
+            </p>
+            <strong>Ưu:</strong> nhanh có sản phẩm, không tự viết auth/CRUD/upload.<br />
+            <strong>Nhược:</strong> khó tùy biến UI cho các bài tương tác phức tạp (ví dụ chỉnh hotspot trên GLB).
+          </div>
+          <div class="card info">
+            <h4>Option B &mdash; Admin tự viết</h4>
+            <p>
+              Backend <strong>Node + Prisma + PostgreSQL</strong>, admin là 1 Next.js app riêng với auth.
+            </p>
+            <strong>Ưu:</strong> toàn quyền UX (kéo-thả tag organelle trên model 3D, preview live).<br />
+            <strong>Nhược:</strong> tốn thời gian, cần đầu tư từ đầu.
+          </div>
+          <div class="card ok">
+            <h4>Option C &mdash; Mở rộng BE hiện có (đang làm)</h4>
+            <p>
+              <strong><code>cell-architecture-backend</code></strong> (Spring Boot + MySQL) đã có auth/user/file upload.
+              Mở rộng thêm entity Lesson/Asset, dùng <code>FileController</code> + storage cho GLB.
+            </p>
+            <strong>Ưu:</strong> FE admin đã nối sẵn; không viết auth lại.<br />
+            <strong>Nhược:</strong> cần thiết kế schema CMS và tách Skill/Permission legacy.
+          </div>
+        </div>
+
+        <p>
+          <strong>Gợi ý:</strong> bắt đầu với <em>Option A (Directus hoặc Payload)</em> cho 80% nội dung text/asset
+          metadata, viết riêng 1&ndash;2 màn admin tùy biến cho phần "annotate model 3D" khi cần thiết. Cách này tiết kiệm
+          6&ndash;12 tuần dev so với tự viết hết.
+        </p>
+
+        <h3>Đề xuất công cụ cụ thể</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Cần</th>
+              <th>Gợi ý 1</th>
+              <th>Gợi ý 2</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Framework public site</td>
+              <td>Next.js 15 (App Router)</td>
+              <td>Vite + React Router 7</td>
+            </tr>
+            <tr>
+              <td>Backend</td>
+              <td><strong>Mở rộng <code>cell-architecture-backend</code></strong> (Spring Boot, đã có)</td>
+              <td>Hono/Nest + Prisma hoặc Supabase (nếu đổi stack)</td>
+            </tr>
+            <tr>
+              <td>Auth</td>
+              <td>Clerk (UI có sẵn, dễ)</td>
+              <td>Supabase Auth (rẻ, mở)</td>
+            </tr>
+            <tr>
+              <td>Object storage</td>
+              <td>Cloudflare R2 (rẻ, không tính egress)</td>
+              <td>AWS S3 + CloudFront</td>
+            </tr>
+            <tr>
+              <td>State client</td>
+              <td>Zustand (gọn nhẹ)</td>
+              <td>TanStack Query cho data từ API</td>
+            </tr>
+            <tr>
+              <td>3D viewer phân tử (Hóa)</td>
+              <td><a href="https://3dmol.org/">3Dmol.js</a> / <a href="https://github.com/molstar/molstar">Mol*</a></td>
+              <td>Tự viết bằng three.js</td>
+            </tr>
+            <tr>
+              <td>Simulation Vật lý</td>
+              <td><a href="https://phet.colorado.edu/">PhET</a> (embed iframe, miễn phí)</td>
+              <td>matter.js / cannon-es nếu tự viết</td>
+            </tr>
+            <tr>
+              <td>CMS quản trị</td>
+              <td>Payload CMS (Node + Postgres)</td>
+              <td>Directus</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 7. ROADMAP -->
+        <h2 class="section" id="roadmap">7. Roadmap đề xuất</h2>
+
+        <div class="card">
+          <h4>Giai đoạn 0 &mdash; Vệ sinh dự án hiện tại (1&ndash;2 tuần)</h4>
+          <ul>
+            <li>Nén GLB bằng Draco hoặc đưa lên CDN.</li>
+            <li><s>Sửa toast tiếng Trung, xóa import thừa</s> &mdash; <strong>đã xong</strong>.</li>
+            <li>Sửa nested <code>&lt;button&gt;</code> trong Sidebar.</li>
+            <li><s>Thêm <code>dispose()</code> khi switch cell GLB</s> &mdash; <strong>đã xong</strong> (<code>AssetCellModel</code>).</li>
+            <li>Thêm ESLint + Prettier + lint-staged.</li>
+            <li><s>Tách <code>App.tsx</code> gallery</s> &mdash; <strong>đã xong</strong>; còn tách <code>CellScene.tsx</code>.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>Giai đoạn 1 &mdash; Tách kiến trúc đa môn (3&ndash;4 tuần)</h4>
+          <ul>
+            <li>Chuyển sang monorepo (tùy chọn; hiện single app ổn).</li>
+            <li>Định nghĩa schema <code>Subject / Topic / Lesson / Asset</code> (mở rộng <code>data/schema</code>).</li>
+            <li>Bóc <code>CellScene</code> thành package hoặc <code>components/three/models/</code>.</li>
+            <li><s>Thêm router <code>/biology/cells/:cellId</code></s> &mdash; <strong>đã có</strong>.</li>
+            <li>Vẫn dùng data tĩnh cho Sinh; chuẩn bị JSON/API cho môn mới.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>Giai đoạn 2 &mdash; Backend + Admin nội dung (4&ndash;6 tuần)</h4>
+          <ul>
+            <li><s>Auth + CRUD user</s> &mdash; <strong>đã có</strong> (<code>cell-architecture-backend</code>, port 7070).</li>
+            <li><s>Dọn BE mailer (email module)</s> &mdash; <strong>đã xong</strong> (Spring Boot <code>com.cellarchitecture.api</code>).</li>
+            <li>Thêm <code>role</code> trên <code>User</code> (BE) &mdash; xem <a href="#srs-phases">8.7 giai đoạn A</a>.</li>
+            <li>API + CMS Subject/Topic/Lesson/Asset &mdash; schema <a href="#srs-tables">8.5</a> (chưa code).</li>
+            <li>Object storage R2/S3 cho GLB, ảnh.</li>
+            <li>Web gallery gọi API thay vì <code>data/biology/cells.ts</code>.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>Giai đoạn 3 &mdash; Mở rộng môn Hóa &amp; Lý (6&ndash;10 tuần)</h4>
+          <ul>
+            <li>Thêm renderer phân tử (Mol* hoặc 3Dmol.js) cho môn Hóa.</li>
+            <li>Tích hợp PhET embed cho mô phỏng Lý (nhanh, đầy đủ, hợp pháp).</li>
+            <li>Bộ quiz đơn giản (multiple choice + drag-and-drop) dùng chung 3 môn.</li>
+            <li>Mastery tracking thật sự lưu vào DB theo user.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>Giai đoạn 4 &mdash; Trải nghiệm trường học (mở rộng)</h4>
+          <ul>
+            <li>Multi-tenant (mỗi trường 1 workspace).</li>
+            <li>Giáo viên tạo lớp, gán bài, xem tiến độ học sinh.</li>
+            <li>PWA + offline mode cho lớp học không có wifi ổn định.</li>
+            <li>i18n (tiếng Việt + tiếng Anh) &mdash; quan trọng nếu định bán cho trường quốc tế.</li>
+            <li>Analytics: bài nào hay drop-off, organelle nào ít người mở &rarr; cải tiến.</li>
+          </ul>
+        </div>
+
+        <!-- 8. SRS & DATABASE -->
+        <h2 class="section" id="srs">8. SRS (rút gọn) &amp; thiết kế cơ sở dữ liệu</h2>
+
+        <p class="lead">
+          Tài liệu yêu cầu phần mềm (SRS) nhúng trong review &mdash; đủ để chốt schema MySQL trên
+          <code>cell-architecture-backend</code> trước khi code CMS. Nguyên tắc: <strong>SRS &rarr; ERD logic &rarr; bảng vật lý &rarr; API</strong>,
+          không thiết kế bảng rời khi chưa khóa phạm vi MVP.
+        </p>
+
+        <h3 id="srs-scope">8.1 Mục tiêu &amp; phạm vi</h3>
+
+        <div class="grid-2">
+          <div class="card ok">
+            <h4>Mục tiêu sản phẩm</h4>
+            <ul>
+              <li>Nền tảng học liệu 3D: xem mô hình tế bào / bài tương tác theo môn.</li>
+              <li>Admin quản lý người dùng và (giai đoạn 2) nội dung bài học + file GLB.</li>
+              <li>Gallery công khai đọc nội dung đã <code>published</code> từ API.</li>
+            </ul>
+          </div>
+          <div class="card info">
+            <h4>Phạm vi MVP (v1)</h4>
+            <ul>
+              <li><strong>Môn:</strong> Sinh học &mdash; chủ đề tế bào (tương đương <code>CellItem</code> hiện tại).</li>
+              <li><strong>Auth:</strong> đăng ký, đăng nhập JWT, CRUD user, thêm <code>role</code>.</li>
+              <li><strong>CMS:</strong> CRUD lesson + upload GLB/ảnh qua <code>FileController</code>.</li>
+              <li><strong>FE:</strong> gallery gọi API thay <code>data/biology/cells.ts</code> (có fallback tĩnh tạm).</li>
+            </ul>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Trong phạm vi v1</th><th>Ngoài phạm vi v1 (ghi backlog)</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1 subject (<code>biology</code>), topics, lessons, assets 3D</td>
+              <td>Môn Hóa, Lý, PhET, molecule viewer</td>
+            </tr>
+            <tr>
+              <td>Organelle metadata (JSON hoặc bảng con)</td>
+              <td>Quiz, mastery tracking, analytics chi tiết</td>
+            </tr>
+            <tr>
+              <td>Workflow <code>draft</code> / <code>published</code></td>
+              <td>Multi-tenant (theo trường), lớp học, gán bài</td>
+            </tr>
+            <tr>
+              <td>Soft-delete (<code>voided</code>) như <code>users</code> hiện tại</td>
+              <td>Versioning từng lesson, audit đầy đủ, i18n DB</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="srs-actors">8.2 Tác nhân (actors)</h3>
+        <table>
+          <thead>
+            <tr><th>Tác nhân</th><th>Mô tả</th><th>Quyền chính</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Guest</strong></td>
+              <td>Khách, không đăng nhập</td>
+              <td>Xem gallery lesson <code>published</code></td>
+            </tr>
+            <tr>
+              <td><strong>User</strong></td>
+              <td>Tài khoản đã đăng ký (học sinh / giáo viên chung)</td>
+              <td>Xem gallery; đổi mật khẩu; (sau) lưu tiến độ</td>
+            </tr>
+            <tr>
+              <td><strong>Admin</strong></td>
+              <td>Quản trị hệ thống</td>
+              <td>CRUD user; CRUD subject/topic/lesson/asset; publish</td>
+            </tr>
+            <tr>
+              <td><strong>Hệ thống</strong></td>
+              <td>BE + storage + CDN</td>
+              <td>Lưu file, phát GLB, validate JWT</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <code>role</code> đề xuất (enum): <code>ADMIN</code>, <code>TEACHER</code>, <code>USER</code>.
+          MVP có thể chỉ dùng <code>ADMIN</code> + <code>USER</code>; <code>TEACHER</code> khi có workflow duyệt nội dung.
+        </p>
+
+        <h3 id="srs-stories">8.3 User stories (ưu tiên)</h3>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Story</th><th>Ưu tiên</th><th>Phụ thuộc DB</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>US-01</td>
+              <td>Là admin, tôi tạo/sửa/xóa user và gán <code>role</code>.</td>
+              <td><span class="badge ok">P0</span></td>
+              <td><code>users.role</code></td>
+            </tr>
+            <tr>
+              <td>US-02</td>
+              <td>Là guest, tôi mở <code>/biology/cells/:slug</code> và xem lesson published + GLB.</td>
+              <td><span class="badge ok">P0</span></td>
+              <td><code>lessons</code>, <code>assets</code></td>
+            </tr>
+            <tr>
+              <td>US-03</td>
+              <td>Là admin, tôi tạo lesson (metadata + organelles) và upload GLB.</td>
+              <td><span class="badge warn">P1</span></td>
+              <td><code>lessons</code>, <code>lesson_organelles</code>, <code>assets</code></td>
+            </tr>
+            <tr>
+              <td>US-04</td>
+              <td>Là admin, tôi chuyển lesson <code>draft</code> &rarr; <code>published</code>.</td>
+              <td><span class="badge warn">P1</span></td>
+              <td><code>lessons.status</code></td>
+            </tr>
+            <tr>
+              <td>US-05</td>
+              <td>Là admin, tôi import 8 cell từ <code>cells.ts</code> vào DB một lần.</td>
+              <td><span class="badge warn">P1</span></td>
+              <td>Migration script + <code>lessons</code></td>
+            </tr>
+            <tr>
+              <td>US-06</td>
+              <td>Là admin, tôi thêm topic/môn mới (chuẩn bị Hóa/Lý).</td>
+              <td><span class="badge info">P2</span></td>
+              <td><code>subjects</code>, <code>topics</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="srs-erd">8.4 ERD &amp; mối quan hệ giữa các bảng</h3>
+
+        <p><strong>Sơ đồ quan hệ (logic):</strong></p>
+        <pre><code>                    ┌─────────────┐
+                    │   subjects   │
+                    │ id, code, …  │
+                    └──────┬──────┘
+                           │ 1
+                           │
+                           │ N
+                    ┌──────▼──────┐
+                    │    topics    │
+                    │ id, subject  │
+                    └──────┬──────┘
+                           │ 1
+                           │ N
+                    ┌──────▼──────┐         ┌──────────────────┐
+                    │   lessons    │ 1     N │ lesson_organelles │
+                    │ slug, meta…  ├─────────┤ (hoặc JSON trên   │
+                    └──────┬──────┘         │  lessons)         │
+                           │ 1              └──────────────────┘
+                           │ N
+                    ┌──────▼──────┐
+                    │   assets     │──────► file trên disk / CDN
+                    │ glb, preview │
+                    └─────────────┘
+
+┌─────────────┐     ┌─────────────┐ (tùy chọn MVP+)
+│    users    │     │ permissions │◄── legacy jobhunter
+│ role, email │     │  (RBAC API) │
+└─────────────┘     └─────────────┘</code></pre>
+
+        <p><strong>Bảng quan hệ (cardinality &amp; ràng buộc):</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Bảng A</th>
+              <th>Quan hệ</th>
+              <th>Bảng B</th>
+              <th>FK / ghi chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>subjects</code></td>
+              <td>1 &mdash; N</td>
+              <td><code>topics</code></td>
+              <td><code>topics.subject_id</code> &rarr; <code>subjects.id</code></td>
+            </tr>
+            <tr>
+              <td><code>topics</code></td>
+              <td>1 &mdash; N</td>
+              <td><code>lessons</code></td>
+              <td><code>lessons.topic_id</code> &rarr; <code>topics.id</code></td>
+            </tr>
+            <tr>
+              <td><code>lessons</code></td>
+              <td>1 &mdash; N</td>
+              <td><code>lesson_organelles</code></td>
+              <td>Hoặc <code>lessons.organelles_json</code> (MVP nhanh)</td>
+            </tr>
+            <tr>
+              <td><code>lessons</code></td>
+              <td>1 &mdash; 0..1 (primary)</td>
+              <td><code>assets</code></td>
+              <td><code>lessons.primary_asset_id</code> &rarr; GLB chính; có thể thêm N assets phụ</td>
+            </tr>
+            <tr>
+              <td><code>lessons</code></td>
+              <td>1 &mdash; N</td>
+              <td><code>assets</code></td>
+              <td>Nếu nhiều file: <code>assets.lesson_id</code></td>
+            </tr>
+            <tr>
+              <td><code>users</code></td>
+              <td>độc lập</td>
+              <td><code>lessons</code></td>
+              <td><code>created_by</code> / <code>updated_by</code> (UUID, optional)</td>
+            </tr>
+            <tr>
+              <td><code>permissions</code></td>
+              <td>tùy chọn</td>
+              <td><code>users</code></td>
+              <td>Bảng <code>user_permissions</code> nếu dùng RBAC matrix; MVP có thể chỉ <code>users.role</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="quote">
+          <strong>Quy ước kế thừa từ code hiện tại:</strong> mọi bảng nghiệp vụ mới nên extend pattern
+          <code>BaseObject</code> (<code>id</code> UUID, <code>created_at</code>, <code>updated_at</code>, <code>voided</code>, …)
+          giống <code>users</code>.
+        </div>
+
+        <h3 id="srs-tables">8.5 Chi tiết bảng đề xuất (MySQL)</h3>
+
+        <h4>Bảng đã có</h4>
+        <table>
+          <thead>
+            <tr><th>Bảng</th><th>Trạng thái</th><th>Bổ sung đề xuất</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>users</code></td>
+              <td><span class="badge ok">Có</span></td>
+              <td><code>role</code> VARCHAR(32); index <code>email</code>, <code>voided</code></td>
+            </tr>
+            <tr>
+              <td><code>permissions</code>, <code>skills</code></td>
+              <td><span class="badge warn">Legacy</span></td>
+              <td>Giữ hoặc ẩn API; không dùng cho CMS Sinh v1</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Bảng mới (CMS nội dung)</h4>
+        <table>
+          <thead>
+            <tr><th>Bảng</th><th>Cột chính</th><th>Ghi chú</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>subjects</code></td>
+              <td><code>id</code>, <code>code</code> (biology), <code>name</code>, <code>sort_order</code>, <code>voided</code></td>
+              <td>1 row seed: Sinh học</td>
+            </tr>
+            <tr>
+              <td><code>topics</code></td>
+              <td><code>id</code>, <code>subject_id</code>, <code>code</code>, <code>name</code>, <code>summary</code></td>
+              <td>VD: <code>cell-structure</code> &mdash; Cấu trúc tế bào</td>
+            </tr>
+            <tr>
+              <td><code>lessons</code></td>
+              <td>
+                <code>id</code>, <code>topic_id</code>, <code>slug</code> (animal-cell), <code>name</code>, <code>type_label</code>,
+                <code>accent</code>, <code>accent_soft</code>, <code>color</code>, <code>model_kind</code>,
+                <code>default_organelle_id</code>, <code>comparison</code>, <code>occurrence_json</code>,
+                <code>microscope_json</code>, <code>status</code> (DRAFT|PUBLISHED), <code>sort_order</code>
+              </td>
+              <td><code>slug</code> = <code>CellItem.id</code> cho URL FE</td>
+            </tr>
+            <tr>
+              <td><code>lesson_organelles</code></td>
+              <td><code>lesson_id</code>, <code>organelle_key</code>, <code>name</code>, <code>subtitle</code>, <code>color</code>, <code>attributes_json</code>, <code>note</code>, <code>fact</code>, <code>sort_order</code></td>
+              <td>Thay mảng <code>organelles[]</code> trong TS</td>
+            </tr>
+            <tr>
+              <td><code>assets</code></td>
+              <td>
+                <code>id</code>, <code>lesson_id</code>, <code>kind</code> (GLB|IMAGE|PREVIEW),
+                <code>storage_path</code>, <code>public_url</code>, <code>file_name</code>, <code>mime_type</code>, <code>size_bytes</code>,
+                <code>scale</code>, <code>rotation_json</code>, <code>position_json</code>, <code>exposure</code>, <code>material_mode</code>,
+                <code>source_label</code>, <code>source_url</code>
+              </td>
+              <td>Map <code>CellModelAsset</code> + <code>renderImage</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p><strong>Index gợi ý:</strong></p>
+        <ul>
+          <li><code>lessons(slug)</code> UNIQUE where <code>voided = false</code></li>
+          <li><code>lessons(topic_id, status, sort_order)</code> cho list gallery</li>
+          <li><code>assets(lesson_id, kind)</code></li>
+          <li><code>topics(subject_id)</code></li>
+        </ul>
+
+        <h3 id="srs-mapping">8.6 Ánh xạ <code>CellItem</code> (FE) &rarr; bảng DB</h3>
+        <table>
+          <thead>
+            <tr><th><code>CellItem</code> / nested</th><th>Lưu tại</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>id</code></td><td><code>lessons.slug</code></td></tr>
+            <tr><td><code>name</code>, <code>type</code>, màu accent</td><td><code>lessons.name</code>, <code>type_label</code>, <code>accent*</code>, <code>color</code></td></tr>
+            <tr><td><code>modelKind</code></td><td><code>lessons.model_kind</code></td></tr>
+            <tr><td><code>defaultOrganelle</code></td><td><code>lessons.default_organelle_id</code></td></tr>
+            <tr><td><code>comparison</code></td><td><code>lessons.comparison</code> (TEXT)</td></tr>
+            <tr><td><code>occurrence</code></td><td><code>lessons.occurrence_json</code></td></tr>
+            <tr><td><code>microscope[]</code></td><td><code>lessons.microscope_json</code></td></tr>
+            <tr><td><code>organelles[]</code></td><td><code>lesson_organelles</code> hoặc JSON</td></tr>
+            <tr><td><code>modelAsset</code></td><td><code>assets</code> kind=GLB</td></tr>
+            <tr><td><code>renderImage</code></td><td><code>assets</code> kind=IMAGE</td></tr>
+            <tr><td>Subject Sinh</td><td><code>subjects.code = 'biology'</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3 id="srs-phases">8.7 Triển khai theo giai đoạn (sau SRS)</h3>
+        <table>
+          <thead>
+            <tr><th>Giai đoạn</th><th>DB / API</th><th>Kết quả</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>A</strong></td>
+              <td>Migration: <code>users.role</code></td>
+              <td>FE <code>ManageUserPage</code> khớp BE</td>
+            </tr>
+            <tr>
+              <td><strong>B</strong></td>
+              <td>Tạo <code>subjects</code>, <code>topics</code>, <code>lessons</code>, <code>assets</code></td>
+              <td>Entity JPA + CRUD admin API</td>
+            </tr>
+            <tr>
+              <td><strong>C</strong></td>
+              <td>Script import <code>cells.ts</code> &rarr; DB</td>
+              <td>8 lesson published, GLB trỏ <code>public_url</code> hoặc CDN</td>
+            </tr>
+            <tr>
+              <td><strong>D</strong></td>
+              <td>FE gallery <code>GET /api/v1/biology/lessons</code></td>
+              <td>Bỏ phụ thuộc file tĩnh (hoặc cache fallback)</td>
+            </tr>
+            <tr>
+              <td><strong>E</strong></td>
+              <td>Thêm subject/topic mới</td>
+              <td>Sẵn sàng Hóa/Lý (schema đã có <code>subjects</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="srs-ac">8.8 Tiêu chí chấp nhận (MVP CMS)</h3>
+        <ul>
+          <li>Admin tạo lesson <code>draft</code>, upload GLB &lt; 100&nbsp;MB, lưu path trong <code>assets</code>.</li>
+          <li>Publish lesson &rarr; guest thấy trên gallery trong &lt; 1 phút (không cần deploy FE).</li>
+          <li><code>GET lesson by slug</code> trả đủ organelles + URL GLB cho <code>CellScene</code>.</li>
+          <li>Import 8 cell cũ: slug trùng <code>cells.ts</code>, hình ảnh thumbnail hoạt động.</li>
+          <li>User không có quyền admin không gọi được API tạo/sửa lesson (403).</li>
+        </ul>
+
+        <p>
+          <strong>API REST gợi ý (prefix <code>/api/v1</code>):</strong>
+          <code>GET /subjects</code>,
+          <code>GET /topics?subject=biology</code>,
+          <code>GET /lessons?status=PUBLISHED</code>,
+          <code>GET /lessons/{slug}</code>,
+          <code>POST|PUT|DELETE /admin/lessons</code>,
+          <code>POST /admin/lessons/{id}/assets</code> (multipart).
+        </p>
+
+        <!-- 9. RỦI RO -->
+        <h2 class="section" id="risks">9. Rủi ro &amp; cân nhắc</h2>
+
+        <div class="grid-2">
+          <div class="card warn">
+            <h4>Bản quyền model</h4>
+            <p>
+              Model NIH 3D công khai (OK). Nhưng <code>plant-cell-first001.glb</code> và <code>white-blood-cell-user.glb</code>
+              hiện ghi nguồn là máy local của tác giả gốc &mdash; <strong>chưa rõ giấy phép</strong>. Nếu định thương mại hóa,
+              cần xác minh nguồn hoặc thay bằng model có license rõ ràng (Sketchfab CC-BY, BioModels...).
+            </p>
+          </div>
+          <div class="card warn">
+            <h4>Chi phí bandwidth</h4>
+            <p>
+              Asset 3D nặng + nhiều học sinh sẽ tốn rất nhiều bandwidth. Vercel free tier giới hạn 100&nbsp;GB/tháng &mdash;
+              chỉ cần ~1500 lượt load là hết. Cloudflare R2 không tính phí egress &rarr; rẻ hơn nhiều.
+            </p>
+          </div>
+          <div class="card warn">
+            <h4>Thiết bị phổ thông Việt Nam</h4>
+            <p>
+              Học sinh thường dùng điện thoại Android giá rẻ (2&ndash;4&nbsp;GB RAM, GPU yếu). Cần test thật trên thiết bị
+              đó, không chỉ desktop. Bật fallback procedural khi WebGL kém / mobile yếu.
+            </p>
+          </div>
+          <div class="card warn">
+            <h4>Đội ngũ tạo nội dung</h4>
+            <p>
+              Có engine 3D đẹp nhưng không có giáo viên chuyên môn duyệt thì nội dung dễ sai khoa học. Cân nhắc workflow
+              <em>draft &rarr; review &rarr; publish</em> trong admin từ giai đoạn 2.
+            </p>
+          </div>
+          <div class="card warn">
+            <h4>Hiệu năng compile khi monorepo lớn</h4>
+            <p>
+              Khi có 3 môn × n bài × asset 3D, Vite dev có thể chậm. Nên cấu hình <code>build.target: "esnext"</code>,
+              dùng SWC thay Babel, và cân nhắc Turborepo cache để tăng tốc CI.
+            </p>
+          </div>
+          <div class="card warn">
+            <h4>Khóa vendor</h4>
+            <p>
+              Nếu chọn Clerk + Vercel + R2, mỗi cái đều "khóa" bạn vào một nhà cung cấp. Đề xuất ưu tiên giải pháp
+              <em>self-hostable</em> được (Supabase, Payload, Postgres) để giảm rủi ro lâu dài.
+            </p>
+          </div>
+        </div>
+
+        <h2 class="section" id="review-pack">10. Review pack (Teacher/Student)</h2>
+        <p class="lead">
+          Phiên bản hiển thị nhanh bằng HTML để bạn đọc ngay trong một trang, không cần mở từng file
+          <code>.md</code>.
+        </p>
+        <div class="grid-2">
+          <div class="card info">
+            <h4>Phạm vi nghiệp vụ (v1)</h4>
+            <ul>
+              <li><strong>Teacher</strong>: tạo lớp học, môn học, bài học, câu hỏi, giao bài, chấm điểm.</li>
+              <li><strong>Student</strong>: tham gia lớp, xem bài, làm bài, nộp bài, xem kết quả.</li>
+              <li>Mỗi lớp có nhiều môn, mỗi môn có nhiều bài học, mỗi bài học có nội dung + câu hỏi + ảnh/file.</li>
+              <li>Luồng chuẩn: <code>Draft -> Publish -> Assign -> Submit -> Grade</code>.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h4>Sơ đồ luồng chính</h4>
+            <p>
+              <strong>Teacher</strong>: Tạo lớp -> Tạo môn -> Tạo bài -> Thêm câu hỏi/nội dung -> Giao bài -> Chấm bài
+            </p>
+            <p>
+              <strong>Student</strong>: Tham gia lớp -> Xem bài học -> Làm bài -> Nộp bài -> Xem điểm/nhận xét
+            </p>
+            <div class="quote">
+              Gợi ý màn hình admin: <strong>Quản lý lớp</strong> -> <strong>Quản lý môn</strong> ->
+              <strong>Quản lý bài học</strong> -> <strong>Quản lý bài nộp</strong>.
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 14px">
+          <h4>Mô hình dữ liệu cốt lõi (rút gọn)</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Nhóm</th>
+                <th>Bảng đề xuất</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Người dùng &amp; lớp học</td>
+                <td><code>users</code>, <code>classrooms</code>, <code>enrollments</code></td>
+                <td>Ràng buộc role và thành viên lớp</td>
+              </tr>
+              <tr>
+                <td>Nội dung học</td>
+                <td><code>subjects</code>, <code>lessons</code>, <code>lesson_assets</code></td>
+                <td>Bài học chứa text, ảnh, file</td>
+              </tr>
+              <tr>
+                <td>Đánh giá</td>
+                <td><code>questions</code>, <code>question_options</code>, <code>assignments</code></td>
+                <td>Hỗ trợ trắc nghiệm và tự luận</td>
+              </tr>
+              <tr>
+                <td>Bài nộp</td>
+                <td><code>submissions</code>, <code>answers</code></td>
+                <td>Lưu điểm, trạng thái, feedback</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin-bottom: 0">
+            Nếu cần chi tiết đầy đủ, vẫn có thể mở bộ file gốc trong <code>docs/review/</code>.
+          </p>
+        </div>
+        <div class="card" style="margin-top: 14px">
+          <h4>ERD - sơ đồ quan hệ giữa các bảng</h4>
+          <p class="lead">
+            Sơ đồ text dưới đây thể hiện quan hệ 1-n chính cho module lớp học, bài học và bài nộp.
+          </p>
+          <pre><code>users (teacher) 1 ---- n classrooms
+users (student) 1 ---- n enrollments n ---- 1 classrooms
+
+classrooms 1 ---- n subjects
+subjects   1 ---- n lessons
+lessons    1 ---- n lesson_assets
+lessons    1 ---- n questions
+questions  1 ---- n question_options
+
+lessons    1 ---- n assignments
+assignments 1 --- n submissions
+users (student) 1 - n submissions
+submissions 1 --- n answers
+questions   1 --- n answers</code></pre>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Quan hệ</th>
+                <th>FK</th>
+                <th>Ý nghĩa nghiệp vụ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>classrooms</code> -> <code>users</code> (teacher)</td>
+                <td><code>classrooms.teacher_id</code></td>
+                <td>Mỗi lớp có một giáo viên phụ trách chính</td>
+              </tr>
+              <tr>
+                <td><code>enrollments</code> -> <code>classrooms</code>, <code>users</code></td>
+                <td><code>classroom_id</code>, <code>student_id</code></td>
+                <td>Học sinh tham gia nhiều lớp, lớp có nhiều học sinh</td>
+              </tr>
+              <tr>
+                <td><code>subjects</code> -> <code>classrooms</code></td>
+                <td><code>subjects.classroom_id</code></td>
+                <td>Môn học thuộc về một lớp cụ thể</td>
+              </tr>
+              <tr>
+                <td><code>lessons</code> -> <code>subjects</code></td>
+                <td><code>lessons.subject_id</code></td>
+                <td>Bài học nằm trong một môn</td>
+              </tr>
+              <tr>
+                <td><code>questions</code> -> <code>lessons</code></td>
+                <td><code>questions.lesson_id</code></td>
+                <td>Mỗi bài học có danh sách câu hỏi</td>
+              </tr>
+              <tr>
+                <td><code>submissions</code> -> <code>assignments</code>, <code>users</code></td>
+                <td><code>assignment_id</code>, <code>student_id</code></td>
+                <td>Mỗi lần nộp bài gắn với học sinh và bài tập</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top: 14px">
+          <h4>Thiết kế entity cho các bảng (đề xuất v1)</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Bảng</th>
+                <th>Cột chính</th>
+                <th>Ràng buộc quan trọng</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>users</code></td>
+                <td><code>id</code>, <code>name</code>, <code>email</code>, <code>password_hash</code>, <code>role</code>, <code>status</code>, <code>voided</code></td>
+                <td><code>email</code> unique, <code>role in (TEACHER, STUDENT, ADMIN)</code></td>
+              </tr>
+              <tr>
+                <td><code>classrooms</code></td>
+                <td><code>id</code>, <code>name</code>, <code>code</code>, <code>teacher_id</code>, <code>description</code>, <code>voided</code></td>
+                <td><code>code</code> unique, FK <code>teacher_id</code> -> <code>users.id</code></td>
+              </tr>
+              <tr>
+                <td><code>enrollments</code></td>
+                <td><code>id</code>, <code>classroom_id</code>, <code>student_id</code>, <code>joined_at</code>, <code>status</code></td>
+                <td>unique (<code>classroom_id</code>, <code>student_id</code>)</td>
+              </tr>
+              <tr>
+                <td><code>subjects</code></td>
+                <td><code>id</code>, <code>classroom_id</code>, <code>name</code>, <code>display_order</code>, <code>voided</code></td>
+                <td>unique (<code>classroom_id</code>, <code>name</code>)</td>
+              </tr>
+              <tr>
+                <td><code>lessons</code></td>
+                <td><code>id</code>, <code>subject_id</code>, <code>title</code>, <code>content</code>, <code>is_published</code>, <code>display_order</code></td>
+                <td>FK <code>subject_id</code>, index (<code>subject_id</code>, <code>is_published</code>)</td>
+              </tr>
+              <tr>
+                <td><code>lesson_assets</code></td>
+                <td><code>id</code>, <code>lesson_id</code>, <code>type</code>, <code>url</code>, <code>caption</code>, <code>display_order</code></td>
+                <td><code>type in (IMAGE, FILE, VIDEO, LINK)</code></td>
+              </tr>
+              <tr>
+                <td><code>questions</code></td>
+                <td><code>id</code>, <code>lesson_id</code>, <code>type</code>, <code>content</code>, <code>points</code>, <code>display_order</code></td>
+                <td><code>type in (MCQ, ESSAY)</code>, <code>points &gt;= 0</code></td>
+              </tr>
+              <tr>
+                <td><code>question_options</code></td>
+                <td><code>id</code>, <code>question_id</code>, <code>content</code>, <code>is_correct</code>, <code>display_order</code></td>
+                <td>Chỉ áp dụng cho câu hỏi MCQ</td>
+              </tr>
+              <tr>
+                <td><code>assignments</code></td>
+                <td><code>id</code>, <code>lesson_id</code>, <code>title</code>, <code>due_at</code>, <code>allow_late</code>, <code>max_attempts</code></td>
+                <td><code>max_attempts &gt;= 1</code></td>
+              </tr>
+              <tr>
+                <td><code>submissions</code></td>
+                <td><code>id</code>, <code>assignment_id</code>, <code>student_id</code>, <code>attempt_no</code>, <code>status</code>, <code>submitted_at</code>, <code>score</code>, <code>feedback</code></td>
+                <td>unique (<code>assignment_id</code>, <code>student_id</code>, <code>attempt_no</code>)</td>
+              </tr>
+              <tr>
+                <td><code>answers</code></td>
+                <td><code>id</code>, <code>submission_id</code>, <code>question_id</code>, <code>answer_text</code>, <code>selected_option_id</code>, <code>is_correct</code></td>
+                <td>unique (<code>submission_id</code>, <code>question_id</code>)</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="quote">
+            Khuyến nghị kỹ thuật: mọi bảng nên có <code>created_at</code>, <code>updated_at</code>, và <code>voided</code>
+            để đồng nhất với pattern soft-delete hiện có trong backend.
+          </div>
+          <p>
+            <strong>Rule bắt buộc:</strong> từ thời điểm này, mọi thiết kế bảng mới trong hệ thống phải có đủ
+            <code>created_at</code>, <code>updated_at</code>, <code>voided</code>. Bảng nào thiếu 1 trong 3 cột này được xem là
+            chưa đạt chuẩn thiết kế và không đưa vào migration chính thức.
+          </p>
+        </div>
+
+        <h2 class="section" id="execution-plan">11. Kế hoạch triển khai từng bước (bắt đầu ngày mai)</h2>
+        <p class="lead">
+          Mục tiêu: hoàn thiện nền tảng quản trị dữ liệu trước, sau đó mới triển khai nghiệp vụ dạy-học để giảm rủi ro
+          đổi schema giữa chừng.
+        </p>
+        <div class="card info">
+          <h4>Tuần 1 - Ổn định nền &amp; master data</h4>
+          <ol>
+            <li>Ổn định form CRUD theo một chuẩn duy nhất (ưu tiên <code>react-hook-form</code>).</li>
+            <li>Hoàn thiện <strong>Enrollment CRUD</strong> (gán học sinh vào lớp).</li>
+            <li>Chốt liên kết dữ liệu <code>Classroom -> Subject</code> ở BE + FE.</li>
+            <li>Đảm bảo build FE/BE pass và có seed data demo tối thiểu.</li>
+          </ol>
+        </div>
+        <div class="card" style="margin-top: 14px">
+          <h4>Tuần 2 - Nội dung bài học</h4>
+          <ol>
+            <li>Tạo <code>Lesson CRUD</code> theo môn học.</li>
+            <li>Tạo <code>LessonAsset CRUD</code> (text, ảnh, file, link).</li>
+            <li>Thêm trạng thái <code>draft/published</code> cho bài học.</li>
+          </ol>
+        </div>
+        <div class="card" style="margin-top: 14px">
+          <h4>Tuần 3 - Bài tập &amp; câu hỏi</h4>
+          <ol>
+            <li>Tạo <code>Question</code>, <code>QuestionOption</code> (MCQ + essay).</li>
+            <li>Tạo <code>Assignment</code> (deadline, allow late, max attempts).</li>
+            <li>Chuẩn bị API cho luồng nộp bài.</li>
+          </ol>
+        </div>
+        <div class="card" style="margin-top: 14px">
+          <h4>Tuần 4-5 - Luồng học sinh &amp; chấm bài</h4>
+          <ol>
+            <li>Xây màn hình Student: lớp của tôi -> môn -> bài -> làm bài.</li>
+            <li>Tạo <code>Submission</code>, <code>Answer</code> và luồng nộp bài.</li>
+            <li>Teacher chấm điểm + feedback; Student xem kết quả.</li>
+          </ol>
+          <div class="quote">
+            Chu trình mục tiêu cuối: <strong>Draft -> Publish -> Assign -> Submit -> Grade</strong>.
+          </div>
+        </div>
+        <div class="card warn" style="margin-top: 14px">
+          <h4>Checklist trước mỗi phase</h4>
+          <ul>
+            <li>ERD không thay đổi phá vỡ dữ liệu đã tạo.</li>
+            <li>Mọi bảng mới đều có <code>created_at</code>, <code>updated_at</code>, <code>voided</code>.</li>
+            <li>Mỗi CRUD phải test đủ: list, search, create, update, delete (soft-delete).</li>
+            <li>Build FE/BE pass trước khi chuyển phase tiếp theo.</li>
+          </ul>
+        </div>
+
+        <h2 class="section">Tổng kết</h2>
+        <p>
+          Dự án đã tiến từ <strong>prototype một file</strong> sang <strong>FE + BE tách riêng</strong>: gallery Sinh,
+          admin user (FE), API Spring Boot <code>cell-architecture-backend</code> (đã bỏ mailer/email).
+          <strong>Chưa sẵn sàng đa môn / production quy mô lớn</strong> vì: bundle GLB quá nặng, nội dung bài học vẫn file tĩnh trên FE.
+        </p>
+        <p>
+          Ưu tiên tiếp theo: <strong>giai đoạn 0</strong> (nén GLB, a11y Sidebar, ESLint) &rarr;
+          triển khai DB theo <a href="#srs">mục 8 (SRS)</a> (role &rarr; lessons/assets) &rarr; gallery đọc API.
+          Trạng thái: <a href="#issues-resolved">4.0</a>, <a href="#stack-backend">2.1</a>, <a href="#srs-erd">8.4 ERD</a>.
+        </p>
+
+        <footer class="page-foot">
+          Tài liệu review FE: <code>docs/REVIEW.html</code>, <code>docs/STRUCTURE.md</code>, <code>docs/ASSETS.md</code>.
+          BE: <code>cell-architecture-backend/README.md</code>.
+        </footer>
+        </section>
+
+        <!-- ============ TAB: 3D & GLB CƠ BẢN ============ -->
+        <section class="tab-panel" data-panel="basics" role="tabpanel">
+          <p class="lead">
+            Phần này dành cho người chưa quen với 3D / web graphics. Mục tiêu là sau khi đọc xong, bạn có thể đọc
+            code <code>CellScene.tsx</code>, đọc file <code>cells.ts</code>, và hiểu thuật ngữ khi trao đổi với
+            designer 3D hay tham khảo tài liệu Three.js.
+          </p>
+
+          <h2 class="section" id="b-glb">1. GLB là gì?</h2>
+
+          <p>
+            <strong>GLB</strong> viết tắt của <strong>GL Binary</strong> &mdash; định dạng file để lưu <strong>mô hình 3D</strong>.
+            Tưởng tượng nó giống như:
+          </p>
+          <ul>
+            <li><code>.jpg</code> / <code>.png</code> &rarr; lưu ảnh 2D.</li>
+            <li><code>.mp4</code> &rarr; lưu video.</li>
+            <li><code>.glb</code> &rarr; lưu vật thể 3D (xoay được, zoom được, có chất liệu, có ánh sáng).</li>
+          </ul>
+
+          <p>
+            GLB là biến thể "đóng gói thành 1 file duy nhất" của <strong>glTF</strong> (do nhóm Khronos &mdash; cũng là
+            nhóm đứng sau OpenGL/Vulkan &mdash; phát hành năm 2017). Hiện nay GLB được xem như <em>"JPEG của 3D trên
+            web"</em> vì hầu hết trình duyệt và engine 3D đều đọc được.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Định dạng</th>
+                <th>Ai dùng</th>
+                <th>Đặc điểm</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.glb</code> / <code>.gltf</code></td>
+                <td>Web, AR/VR, game nhẹ</td>
+                <td>Mở (open standard), nhỏ gọn, load nhanh &mdash; <strong>dự án của bạn dùng cái này</strong></td>
+              </tr>
+              <tr>
+                <td><code>.fbx</code></td>
+                <td>Game studio (Unity, Unreal)</td>
+                <td>Closed format, file to, mạnh về animation</td>
+              </tr>
+              <tr>
+                <td><code>.obj</code></td>
+                <td>Phần mềm CAD, in 3D</td>
+                <td>Cũ, chỉ lưu hình, không có texture đầy đủ</td>
+              </tr>
+              <tr>
+                <td><code>.blend</code></td>
+                <td>Phần mềm Blender</td>
+                <td>File "nguồn" để chỉnh sửa, không dùng để chạy trực tiếp trên web</td>
+              </tr>
+              <tr>
+                <td><code>.usd</code> / <code>.usdz</code></td>
+                <td>Apple AR Quick Look, Pixar pipeline</td>
+                <td>Mới, mạnh cho scene phức tạp, iOS hỗ trợ tốt</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="quote">
+            Các file trong <code>public/models/*.glb</code> chính là mô hình tế bào 3D đã được dựng trong Blender (hoặc
+            phần mềm tương tự), sau đó <em>export ra GLB</em> để web load.
+          </div>
+
+          <h2 class="section" id="b-inside">2. Bên trong một file GLB có gì?</h2>
+
+          <p>Một file GLB gói chung 3 thành phần chính:</p>
+
+          <div class="ascii">┌────────────────────────────────────────────┐
+│  GEOMETRY (hình học)                       │
+│  - Danh sách các điểm (vertices) trong     │
+│    không gian 3 chiều (x, y, z)            │
+│  - Cách nối chúng thành các tam giác       │
+│    (mesh) tạo nên bề mặt vật thể           │
+├────────────────────────────────────────────┤
+│  MATERIALS (chất liệu)                     │
+│  - Màu, độ bóng (roughness),               │
+│    độ kim loại (metalness)                 │
+│  - Texture (ảnh dán lên bề mặt) để giả     │
+│    lập da, gỗ, màng tế bào, ...            │
+├────────────────────────────────────────────┤
+│  SCENE GRAPH (cây cấu trúc)                │
+│  - Vật thể nào nằm trong vật thể nào       │
+│    (ví dụ "nhân" nằm trong "tế bào")       │
+│  - Vị trí, xoay, scale của từng phần       │
+└────────────────────────────────────────────┘</div>
+
+          <p>
+            Tế bào trong project của bạn <strong>không phải một khối duy nhất</strong> &mdash; nó là <strong>nhiều khối nhỏ
+            ghép lại</strong>: màng tế bào, nhân, ti thể, lưới nội chất, lục lạp... Mỗi khối là một "mesh" với hàng nghìn
+            đến hàng trăm nghìn tam giác.
+          </p>
+
+          <div class="callout">
+            <div>
+              <strong>Hình dung trực quan:</strong> Hãy nghĩ về một quả bóng đá. Bề mặt nó là các miếng ngũ giác /
+              lục giác ghép lại. Trong 3D thì còn cực đoan hơn &mdash; mọi vật thể đều được "ghép từ tam giác", vì GPU
+              chỉ giỏi vẽ tam giác. Quả cầu mượt 3D thực ra là <em>hàng nghìn tam giác siêu nhỏ ghép lại</em>.
+            </div>
+          </div>
+
+          <h2 class="section" id="b-size">3. Tại sao file GLB lại to (50+ MB)?</h2>
+
+          <p>
+            File <code>plant-cell-first001.glb</code> nặng ≈ 56.5&nbsp;MB. Nó to vì 2 lý do chính:
+          </p>
+
+          <div class="grid-2">
+            <div class="card warn">
+              <h4>1. Số lượng tam giác (polygon) rất lớn</h4>
+              <p>
+                Mô hình tế bào "đẹp" có thể có <strong>500.000 &mdash; 2.000.000 tam giác</strong>. Mỗi tam giác cần lưu
+                3 đỉnh × 3 toạ độ × 4 byte = 36 byte tối thiểu. Nhân lên là hàng chục MB chỉ riêng phần hình học.
+              </p>
+            </div>
+            <div class="card warn">
+              <h4>2. Texture (ảnh dán lên bề mặt) đi kèm</h4>
+              <p>
+                Một texture 2048×2048 dạng PNG nặng <strong>5&ndash;15&nbsp;MB</strong>. GLB này có thể có 4&ndash;6
+                texture cho các phần khác nhau (màng, nhân, ti thể...). Đây thường là phần "ăn" dung lượng nhiều nhất.
+              </p>
+            </div>
+          </div>
+
+          <h3>Các kỹ thuật giảm dung lượng</h3>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Kỹ thuật</th>
+                <th>Tác động</th>
+                <th>Đánh đổi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Draco compression</strong></td>
+                <td>Nén hình học (mesh) giảm 5&ndash;10 lần</td>
+                <td>Hơi tốn CPU để giải nén lúc load (vài chục ms)</td>
+              </tr>
+              <tr>
+                <td><strong>Meshopt</strong></td>
+                <td>Tương tự Draco, decode nhanh hơn</td>
+                <td>Mới hơn, ít công cụ hỗ trợ hơn Draco</td>
+              </tr>
+              <tr>
+                <td><strong>KTX2 / Basis Universal</strong></td>
+                <td>Nén texture cho GPU. 5&nbsp;MB &rarr; 500&nbsp;KB</td>
+                <td>Cần compile texture trước khi export</td>
+              </tr>
+              <tr>
+                <td><strong>Decimation</strong></td>
+                <td>Bớt số tam giác trong Blender. 1M &rarr; 100K</td>
+                <td>Làm tay, có thể mất chi tiết nhỏ</td>
+              </tr>
+              <tr>
+                <td><strong>LOD</strong> (Level of Detail)</td>
+                <td>Có nhiều phiên bản, chọn theo khoảng cách camera</td>
+                <td>Phức tạp hơn, cần code chọn LOD đúng lúc</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="quote">
+            Một file GLB 56&nbsp;MB nếu nén Draco + KTX2 đúng cách, thường còn <strong>3&ndash;6&nbsp;MB</strong> mà mắt
+            thường không phân biệt được. Đây là lý do mình xếp "nén GLB" vào mức ưu tiên nghiêm trọng nhất ở tab Review.
+          </div>
+
+          <h2 class="section" id="b-flow">4. Cách project của bạn dùng GLB</h2>
+
+          <p>Đây là luồng đơn giản hoá khi user click vào "Plant Cell":</p>
+
+          <div class="ascii">public/models/plant-cell-first001.glb
+            │
+            │  (1) Vite serve file qua HTTP
+            ▼
+useGLTF("/models/plant-cell-first001.glb")     ← drei helper
+            │
+            │  (2) Three.js parse file:
+            │      - Đọc geometry  → tạo BufferGeometry
+            │      - Đọc material  → tạo MeshStandardMaterial
+            │      - Đọc texture   → upload lên GPU
+            ▼
+   scene (Three.js Object3D)
+            │
+            │  (3) React Three Fiber render
+            │      vào &lt;Canvas&gt; bằng WebGL
+            ▼
+   Hình tế bào 3D hiển thị trên màn hình</div>
+
+          <p>
+            Trong file <code>src/components/CellScene.tsx</code>, function <code>AssetCellModel</code> chính là phần "lắp
+            ráp" này. Nó <strong>clone</strong> scene ra (để có thể chỉnh sửa material mà không ảnh hưởng bản gốc), rồi đi
+            qua từng mesh trong scene và áp lại material cho hợp tone màu app.
+          </p>
+
+          <p>Có 2 chế độ áp material:</p>
+
+          <div class="grid-2">
+            <div class="card info">
+              <h4><code>materialMode: "native"</code></h4>
+              <p>
+                Giữ nguyên texture gốc của file GLB. Hợp khi file đã có chất liệu đẹp sẵn (như plant cell, white blood).
+              </p>
+            </div>
+            <div class="card info">
+              <h4><code>materialMode: "studio"</code></h4>
+              <p>
+                Áp <code>applyAssetVertexColors</code> để tô màu lập trình hoá theo bảng màu app (như NIH models, vốn
+                chỉ có màu xám). Cho cảm giác đồng nhất giữa các cell.
+              </p>
+            </div>
+          </div>
+
+          <h2 class="section" id="b-vocab">5. Từ vựng 3D cơ bản</h2>
+
+          <p>Bảng này để bạn tra cứu khi đọc code Three.js / xem video tutorial:</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Thuật ngữ</th>
+                <th>Nghĩa nôm na</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Mesh</strong></td>
+                <td>Một vật thể 3D, làm từ tam giác. Như "lưới" bao quanh vật.</td>
+              </tr>
+              <tr>
+                <td><strong>Geometry</strong></td>
+                <td>Phần hình của mesh &mdash; chỉ điểm và tam giác, chưa có màu.</td>
+              </tr>
+              <tr>
+                <td><strong>Material</strong></td>
+                <td>Phần "da" của mesh &mdash; màu, ảnh, độ bóng, độ trong.</td>
+              </tr>
+              <tr>
+                <td><strong>Texture</strong></td>
+                <td>Ảnh 2D dán lên mesh để giả lập chi tiết (vân gỗ, lỗ chân lông, màng tế bào...).</td>
+              </tr>
+              <tr>
+                <td><strong>Vertex / Vertices</strong></td>
+                <td>Đỉnh / các đỉnh của tam giác trong không gian 3D (x, y, z).</td>
+              </tr>
+              <tr>
+                <td><strong>Polygon / Triangle count</strong></td>
+                <td>Số tam giác. Càng nhiều càng mịn nhưng càng nặng.</td>
+              </tr>
+              <tr>
+                <td><strong>UV mapping</strong></td>
+                <td>Cách "trải phẳng" mesh ra để dán texture lên &mdash; như mở quả cam ra trải phẳng.</td>
+              </tr>
+              <tr>
+                <td><strong>Normal</strong></td>
+                <td>Vector vuông góc với mặt tam giác, dùng để tính ánh sáng phản xạ.</td>
+              </tr>
+              <tr>
+                <td><strong>Scene</strong></td>
+                <td>"Sân khấu" 3D chứa tất cả mesh, ánh sáng, camera.</td>
+              </tr>
+              <tr>
+                <td><strong>Camera</strong></td>
+                <td>Góc nhìn của người dùng vào scene. Có <code>position</code>, <code>fov</code> (field of view).</td>
+              </tr>
+              <tr>
+                <td><strong>Light</strong></td>
+                <td>
+                  Đèn &mdash; <code>ambient</code> (sáng đều mọi nơi), <code>directional</code> (như mặt trời),
+                  <code>point</code> (bóng đèn), <code>spot</code> (đèn pin).
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Shader</strong></td>
+                <td>Code chạy trên GPU, quyết định mỗi pixel hiển thị màu gì.</td>
+              </tr>
+              <tr>
+                <td><strong>GPU / WebGL</strong></td>
+                <td>"Bo mạch đồ hoạ" trong máy / API trình duyệt để gọi GPU vẽ.</td>
+              </tr>
+              <tr>
+                <td><strong>Frame / FPS</strong></td>
+                <td>1 khung hình / số khung mỗi giây. Mượt = 60 FPS.</td>
+              </tr>
+              <tr>
+                <td><strong>DPR</strong></td>
+                <td>Device Pixel Ratio. Màn Retina có DPR=2 hoặc 3, vẽ tốn gấp 4&ndash;9 lần màn thường.</td>
+              </tr>
+              <tr>
+                <td><strong>LOD</strong> (Level of Detail)</td>
+                <td>Tự đổi mô hình chi tiết cao/thấp tuỳ khoảng cách / kích thước hiển thị.</td>
+              </tr>
+              <tr>
+                <td><strong>Orbit controls</strong></td>
+                <td>Cho phép kéo chuột để xoay camera quanh vật &mdash; dự án dùng <code>OrbitControls</code> của drei.</td>
+              </tr>
+              <tr>
+                <td><strong>PBR</strong></td>
+                <td>
+                  Physically Based Rendering &mdash; cách tính sáng tả thực dựa trên vật lý. <code>MeshStandardMaterial</code>
+                  của Three.js là PBR.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Clipping plane</strong></td>
+                <td>Mặt phẳng "cắt" để xem bên trong vật thể &mdash; "cross section" thật sự là cái này.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Các loại "geometry tạo sẵn" trong Three.js (dùng trong fallback procedural)</h3>
+
+          <p>Khi không có GLB, code project dựng hình bằng các geometry có sẵn của Three.js:</p>
+
+          <div class="pill-row">
+            <span class="pill"><code>sphereGeometry</code> &mdash; hình cầu</span>
+            <span class="pill"><code>capsuleGeometry</code> &mdash; viên thuốc</span>
+            <span class="pill"><code>cylinderGeometry</code> &mdash; trụ</span>
+            <span class="pill"><code>torusGeometry</code> &mdash; vòng donut</span>
+            <span class="pill"><code>RoundedBox</code> &mdash; hộp bo góc</span>
+            <span class="pill"><code>TubeGeometry</code> &mdash; ống cong theo đường</span>
+            <span class="pill"><code>CatmullRomCurve3</code> &mdash; đường cong qua nhiều điểm</span>
+          </div>
+
+          <p>
+            Bạn có thể thấy chúng trong <code>CellScene.tsx</code> ở các function <code>PlantModel</code>,
+            <code>NeuronModel</code>, <code>BacteriaModel</code>... Đây là cách "vẽ tế bào bằng code" thay vì load file.
+          </p>
+
+          <h2 class="section" id="b-tools">6. Công cụ xem &amp; phân tích GLB</h2>
+
+          <p>Bạn có thể kéo thả file <code>.glb</code> bất kỳ vào các trang dưới để xem:</p>
+
+          <div class="grid-2">
+            <div class="card info">
+              <h4>donmccurdy gltf-viewer</h4>
+              <p>
+                <a href="https://gltf-viewer.donmccurdy.com/">gltf-viewer.donmccurdy.com</a> &mdash; chuẩn nhất, hiển thị:
+                số tam giác, dung lượng texture, số draw call, danh sách material.
+              </p>
+            </div>
+            <div class="card info">
+              <h4>Google &lt;model-viewer&gt;</h4>
+              <p>
+                <a href="https://modelviewer.dev/editor/">modelviewer.dev/editor</a> &mdash; đơn giản, có thể chỉnh
+                lighting và export HTML embed.
+              </p>
+            </div>
+            <div class="card info">
+              <h4>Blender (cài đặt)</h4>
+              <p>
+                Phần mềm desktop miễn phí, mở GLB ra chỉnh sửa được. Cần để decimate, gắn texture, export lại GLB nén.
+              </p>
+            </div>
+            <div class="card info">
+              <h4>gltfpack (CLI)</h4>
+              <p>
+                Công cụ dòng lệnh của Meshopt, chạy <code>gltfpack -i in.glb -o out.glb -cc</code> để nén nhanh, đỡ
+                phải mở Blender.
+              </p>
+            </div>
+          </div>
+
+          <div class="callout">
+            <div>
+              <strong>Bài tập gợi ý:</strong> kéo file <code>public/models/plant-cell-first001.glb</code> vào
+              gltf-viewer của donmccurdy. Bạn sẽ thấy con số kiểu <em>"Triangles: 1.4M, Textures: 8 × 2048px"</em> &mdash;
+              đó chính là lý do nó nặng 56&nbsp;MB. Sau khi nén Draco, con số triangles không đổi nhưng dung lượng file
+              tụt 5&ndash;10 lần.
+            </div>
+          </div>
+
+          <h2 class="section" id="b-subjects">7. Mỗi môn dùng loại asset 3D gì?</h2>
+
+          <p>
+            Đây là điểm quan trọng cho kế hoạch mở rộng đa môn: <strong>không phải môn nào cũng dùng GLB</strong>. Mỗi
+            môn có loại "asset 3D" phù hợp riêng:
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Môn</th>
+                <th>Loại asset / kỹ thuật</th>
+                <th>Engine / thư viện gợi ý</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sinh học</strong></td>
+                <td>GLB (tế bào, cơ thể người, giải phẫu)</td>
+                <td>Three.js + drei (như project hiện tại)</td>
+              </tr>
+              <tr>
+                <td><strong>Hóa học</strong></td>
+                <td>
+                  File phân tử <code>.mol</code> / <code>.pdb</code> / <code>.sdf</code>. Không phải GLB &mdash; vì cần
+                  biết nguyên tử nào, liên kết nào để tô màu chuẩn.
+                </td>
+                <td>
+                  <a href="https://github.com/molstar/molstar">Mol*</a> hoặc
+                  <a href="https://3dmol.org/">3Dmol.js</a>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Vật lý</strong></td>
+                <td>
+                  Thường là <strong>simulation thời gian thực</strong> (lăng kính, mạch điện, con lắc, va chạm) &mdash; không
+                  phải mô hình tĩnh.
+                </td>
+                <td>
+                  <a href="https://phet.colorado.edu/">PhET</a> embed (miễn phí), hoặc tự viết bằng
+                  <code>matter.js</code> / <code>cannon-es</code>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Toán</strong></td>
+                <td>Đồ thị hàm, hình khối, vector trong không gian.</td>
+                <td>
+                  <a href="https://www.geogebra.org/">GeoGebra</a> embed,
+                  <a href="https://www.desmos.com/3d">Desmos 3D</a>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Địa lý / Thiên văn</strong></td>
+                <td>Globe, bản đồ địa hình, hệ mặt trời.</td>
+                <td>
+                  <a href="https://cesium.com/">CesiumJS</a>, three.js với texture trái đất NASA
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="quote">
+            Đây chính là lý do mình đề xuất schema <em>discriminated union</em> cho <code>presentation</code> ở tab
+            Review. Một field <code>kind: "cell3d" | "molecule" | "simulation" | "geogebra" | ...</code> để mỗi môn xài
+            đúng engine của nó, chứ không nhồi tất cả vào GLB.
+          </div>
+
+          <h2 class="section" id="b-faq">8. Câu hỏi thường gặp</h2>
+
+          <h3>Q: Mình có cần học Blender để mở rộng dự án không?</h3>
+          <p>
+            <strong>Không bắt buộc</strong> nếu bạn chỉ làm phần code. Cần Blender khi: tự dựng mô hình mới, decimate
+            (giảm tam giác), gắn texture, hoặc fix bug model bị xoay sai. Học cơ bản chỉ tốn 1&ndash;2 buổi tutorial
+            YouTube. Hoặc thuê freelancer trên Fiverr / Sketchfab.
+          </p>
+
+          <h3>Q: Có thể tự sinh model 3D bằng AI không?</h3>
+          <p>
+            Hiện tại có vài công cụ như <strong>Meshy.ai</strong>, <strong>Spline AI</strong>,
+            <strong>Tripo3D</strong>, <strong>Luma Genie</strong> &mdash; sinh model từ text/ảnh. Chất lượng chưa đủ tốt cho
+            mô hình khoa học chính xác (tế bào, phân tử), nhưng dùng được cho prop trang trí, sinh vật minh hoạ. Đừng
+            kỳ vọng AI sinh ra được lục lạp đúng cấu trúc khoa học.
+          </p>
+
+          <h3>Q: GLB có chạy được trên điện thoại cũ không?</h3>
+          <p>
+            Trình duyệt phải hỗ trợ <strong>WebGL 2</strong> (gần như mọi smartphone từ 2017 trở lại đây đều có).
+            Nhưng <em>chạy được</em> khác <em>chạy mượt</em>: với máy yếu, mô hình &gt; 200K tam giác và texture &gt; 1K
+            đã giật. Đó là lý do cần LOD và procedural fallback.
+          </p>
+
+          <h3>Q: Có nên dùng Babylon.js thay Three.js?</h3>
+          <p>
+            Three.js là chuẩn de-facto cho web 3D, cộng đồng lớn nhất, drei + R3F tạo nên ecosystem React rất mạnh.
+            Babylon.js mạnh hơn về tools (có sẵn inspector, animation editor, vật lý tích hợp), phù hợp game studio. Với
+            mục tiêu giáo dục, <strong>Three.js + R3F</strong> như project hiện tại là lựa chọn an toàn nhất.
+          </p>
+
+          <h3>Q: Asset 3D miễn phí kiếm ở đâu?</h3>
+          <ul>
+            <li><a href="https://3d.nih.gov/">NIH 3D Print Exchange</a> &mdash; sinh học, y khoa, miễn phí, public domain.</li>
+            <li><a href="https://sketchfab.com/">Sketchfab</a> &mdash; filter "Downloadable, CC license".</li>
+            <li><a href="https://poly.pizza/">Poly Pizza</a> &mdash; thư viện cộng đồng CC0.</li>
+            <li><a href="https://www.thingiverse.com/">Thingiverse</a> &mdash; thiên về in 3D, nhưng có nhiều file dùng được.</li>
+            <li><a href="https://www.rcsb.org/">RCSB PDB</a> &mdash; protein cho hóa sinh, miễn phí.</li>
+          </ul>
+
+          <h3>Q: GLB có thể có animation không?</h3>
+          <p>
+            Có. GLB hỗ trợ <strong>skeletal animation</strong> (xương + da, như nhân vật cử động) và
+            <strong>morph targets</strong> (chuyển từ hình A sang hình B mượt). Drei có hook <code>useAnimations()</code>
+            để chạy. Phù hợp khi muốn làm bài "quá trình phân bào", "tim đập", "máu chảy"...
+          </p>
+
+          <h3>Q: Khác biệt giữa "render" và "load" GLB?</h3>
+          <p>
+            <strong>Load</strong>: tải file GLB từ server xuống, parse ra Object3D &mdash; chỉ làm 1 lần. <br />
+            <strong>Render</strong>: vẽ Object3D đó lên màn hình bằng GPU &mdash; làm liên tục 60 lần/giây. <br />
+            Tối ưu load là giảm dung lượng file. Tối ưu render là giảm số tam giác / texture cho mỗi frame.
+          </p>
+
+          <footer class="page-foot">
+            Đây là phụ lục dành cho người mới làm quen với 3D web. Khi bạn đã quen, có thể đọc thẳng
+            <a href="https://threejs.org/manual/">Three.js manual</a> và
+            <a href="https://r3f.docs.pmnd.rs/">React Three Fiber docs</a> để đi sâu hơn.
+          </footer>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      (function () {
+        const tabs = document.querySelectorAll(".tabs button[data-tab]");
+        const panels = document.querySelectorAll(".tab-panel[data-panel]");
+        const tocs = document.querySelectorAll(".toc-group[data-toc]");
+
+        function activate(name) {
+          tabs.forEach((btn) => {
+            const active = btn.dataset.tab === name;
+            btn.classList.toggle("is-active", active);
+            btn.setAttribute("aria-selected", active ? "true" : "false");
+          });
+          panels.forEach((panel) => {
+            panel.classList.toggle("is-active", panel.dataset.panel === name);
+          });
+          tocs.forEach((toc) => {
+            toc.classList.toggle("is-active", toc.dataset.toc === name);
+          });
+          if (history.replaceState) {
+            history.replaceState(null, "", "#tab=" + name);
+          }
+        }
+
+        tabs.forEach((btn) => {
+          btn.addEventListener("click", () => activate(btn.dataset.tab));
+        });
+
+        const initial = (location.hash.match(/tab=([\w-]+)/) || [])[1];
+        if (initial) {
+          activate(initial);
+        }
+
+        document.querySelectorAll(".toc-group a[href^='#']").forEach((link) => {
+          link.addEventListener("click", (event) => {
+            const href = link.getAttribute("href");
+            if (!href || href.length < 2) return;
+            const target = document.querySelector(href);
+            if (!target) return;
+            event.preventDefault();
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
